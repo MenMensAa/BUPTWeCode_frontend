@@ -1,0 +1,11 @@
+export const CODES = {
+    OK: 200,
+    TOKEN_MISSING: 490,
+    TOKEN_EXPIRE: 491,
+    TOKEN_ERROR: 492,
+    PARAMS_ERROR: 400,
+    AUTH_ERROR: 401,
+    REQ_REJECT: 403,
+    SOURCE_ERROR: 404,
+    SERVER_ERROR: 500,
+}
