@@ -3,7 +3,7 @@ import { CODES } from '../common/cnst.js'
 
 
 export default function axios (options) {
-    const baseURL = "http://192.168.0.102:5000"
+    const baseURL = "https://www.buptwecode.com"
     const url = baseURL + options.url
     let header = options.header
     if (store.getters.hasToken) {
