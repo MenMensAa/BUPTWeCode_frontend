@@ -12,6 +12,18 @@
             "path" : "pages/drafts/drafts",
             "style" : {}
         }
+        ,{
+            "path" : "pages/board/board",
+            "style" : {}
+        }
+        ,{
+            "path" : "pages/article/article",
+            "style" : {}
+        }
+        ,{
+              "path" : "pages/feedback/feedback",
+              "style" : {}
+        }
     ],
 	"globalStyle": {
 		"navigationBarTitleText": "uni-app",

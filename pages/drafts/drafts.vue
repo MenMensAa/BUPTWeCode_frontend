@@ -14,12 +14,14 @@
         
         <view class="cu-card article" v-for="(item, index) in drafts" :key="index" @click="draftClick(index)">
         	<view class="cu-item shadow draft-card">
-        		<view class="title"><view class="text-cut">{{item.draft.title | titleFilter}}</view></view>
+        		<view class="title">
+                    <view class="text-cut">{{item.draft.title | titleFilter}}</view>
+                </view>
         		<view class="content">
-                    <template v-if="item.draft.imageList.length > 0">
-                        <image :src="item.draft.imageList[0]" mode="aspectFill"></image>
+                    <template v-if="item.draft.images.length > 0">
+                        <image :src="item.draft.images[0]" mode="aspectFill"></image>
                     </template>
-        			<view :class="{ desc: item.draft.imageList.length > 0 }">
+        			<view :class="{ desc: item.draft.images.length > 0 }">
         				<view class="text-content">{{item.draft.content | contentFilter}}</view>
         			</view>
         		</view>

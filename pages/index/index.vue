@@ -10,7 +10,7 @@
             <home-view></home-view>
         </template>
         <template v-else-if="activeIndex == 1">
-            <search-view></search-view>
+            <board-view></board-view>
         </template>
         <template v-else-if="activeIndex == 2">
             <message-view></message-view>
@@ -19,6 +19,7 @@
             <me-view></me-view>
         </template>
         <tab-bar @tabbarClick="tabbarClick"></tab-bar>
+        <view class="tabbar-filler"></view>
 	</view>
 </template>
 
@@ -27,7 +28,7 @@
     import Home from '../../views/home.vue'
     import Me from '../../views/me.vue'
     import Message from '../../views/message.vue'
-    import Search from '../../views/search.vue'
+    import Board from '../../views/board.vue'
     
 	export default {
 		data() {
@@ -40,7 +41,7 @@
             'home-view': Home,
             'me-view': Me,
             'message-view': Message,
-            'search-view': Search
+            'board-view': Board
         },
 		onLoad(options) {
             
@@ -68,5 +69,8 @@
 .index {
     position: relative;
     min-height: 100%;
+}
+.tabbar-filler {
+    height: 140rpx;
 }
 </style>

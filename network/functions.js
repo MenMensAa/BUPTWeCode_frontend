@@ -1,40 +1,5 @@
 import axios from './index.js'
 
-// let post = function(url, data, json=false) {
-//     if (json) {
-//         return axios({
-//             method: 'post',
-//             url: url,
-//             headers: {
-//                 'Content-Type': 'application/json'
-//             },
-//             data: data,
-//         })
-//     } else {
-//          return axios({
-//                 method: 'post',
-//                 url: url,
-//                 headers: {
-//                     'Content-Type': 'application/x-www-form-urlencoded'
-//                 },
-//                 data: data,
-//                 // transformRequest: [ data => qs.stringify(data, { arrayFormat: "indices" }) ]
-//                 // transformRequest: [ data => qs.stringify(data, { arrayFormat: "brackets" }) ]
-//                 transformRequest: [ data => qs.stringify(data, { arrayFormat: "repeat" }) ]
-
-//                 // transformRequest: [ data => qs.stringify(data, { indices: false }) ]
-//             })
-//     }
-// }
-
-// let get = function(url, data) {
-//     return axios({
-//         method: 'get',
-//         url: url,
-//         params: data
-//     })
-// }
-
 let get = function(options) {
     return axios({
         url: options.url,
@@ -46,6 +11,8 @@ let get = function(options) {
     })
 }
 
+// 1.如果有post传递的数据是复杂类型的数据（some fields in list, dict）, json=true
+// 2.如果传递的数据类型不包含复杂类型的数据(all field not list, dict), json=false
 let post = function(options, json=false) {
     if (!json) {
         return axios({
@@ -79,6 +46,30 @@ export function GET_imageUptoken() {
 // common结束部分
 
 // 专有部分,一般只供单独组件调用
+export function POST_feedback_submitBtnClick(data) {
+    let tmp_data = {
+        ...data
+    }
+    console.log(data)
+    return post({
+        url: '/api/feedback/submit/',
+        data: tmp_data
+    }, true)
+}
+
+export function GET_board_article(data) {
+    return get({
+        url: "/api/article/query/",
+        data: data
+    })
+}
+
+export function GET_board_mounted() {
+    return get({
+        url: "/api/board/"
+    })
+}
+
 export function POST_editor_publishBtnClick(board_id, data) {
     let tmp_data = {
         board_id: board_id,
@@ -86,9 +77,9 @@ export function POST_editor_publishBtnClick(board_id, data) {
     }
     console.log(data)
     return post({
-        url: '/api/article/operate/',
+        url: '/api/article/put/',
         data: tmp_data
-    })
+    }, true)
 }
 
 export function GET_me_login(code) {

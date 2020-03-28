@@ -4,7 +4,7 @@
             <view class="me-header flex margin-sm padding-sm shadow bg-white">
                 <view class="flex-sub">
                     <view class="cu-avatar xl round bg-red"
-                          :style="[{ backgroundImage: 'url(' + userInfo.avatarUrl + ')'}]">
+                          :style="[{ backgroundImage: 'url(' + userInfo.avatar + ')'}]">
                         <view class="cu-tag badge" :class=" userInfo.gender%2 == 0 ? 'cuIcon-female bg-pink': 'cuIcon-male bg-blue' "></view>
                     </view>
                 </view>
@@ -64,7 +64,7 @@
                     { name: "帖子管理", icon: "cuIcon-form" },
                     { name: "收藏夹", icon: "cuIcon-favor" },
                     { name: "草稿箱", icon: "cuIcon-edit", dest: "/pages/drafts/drafts" },
-                    { name: "反馈", icon: "cuIcon-service"}
+                    { name: "反馈", icon: "cuIcon-service", dest: "/pages/feedback/feedback"}
                 ],
             }
         },
@@ -173,7 +173,7 @@
                 } else {
                     return {
                         username: "这是用户名",
-                        avatarUrl: "",
+                        avatar: "",
                         gender: 0,
                         signature: "这是用户签名"
                     }

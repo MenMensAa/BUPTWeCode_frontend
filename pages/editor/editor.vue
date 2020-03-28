@@ -10,6 +10,17 @@
         <my-dialog ref="dialog"></my-dialog>
 		<my-modal ref="modal"></my-modal>
         <my-toast ref="toast"></my-toast>
+        <my-selector ref="selector" :datas="boardList" 
+                     display="name" checked="board_id" @confirm="boardConfirmHandler"></my-selector>
+        
+        <view class="cu-bar bg-white">
+        	<view class="action">
+        		<text class="cuIcon-title text-orange "></text> {{boardNameToPublish}}
+        	</view>
+        	<view class="action" v-if="showBoardSelector">
+        		<button class="cu-btn bg-green shadow" @click="choiceBoardHandler">选择</button>
+        	</view>
+        </view>
         
         <form action="">
             <view class="padding-tb-sm padding-lr-xl solid-bottom text-xxl">
@@ -60,14 +71,34 @@
 
 <script>
     import { imageUploader } from '../../common/image_uploader.js'
-    import { POST_editor_publishBtnClick } from '../../network/functions.js'
+    import { POST_editor_publishBtnClick, GET_board_mounted } from '../../network/functions.js'
     
 	export default {
         onLoad(options) {
             if (!!options.index) {
-                this.articleForm = JSON.parse(JSON.stringify(this.$store.getters.drafts[options.index].draft))
+                let draft = JSON.parse(JSON.stringify(this.$store.getters.drafts[options.index]))
+                this.articleForm = draft.draft
+                this.selectedBoard = draft.board
                 this.draftIndex = options.index
-                this.tmpImageList = JSON.parse(JSON.stringify(this.articleForm.imageList))
+                this.tmpImageList = JSON.parse(JSON.stringify(this.articleForm.images))
+            }
+            if (!!options.board_id) {
+                this.selectedBoard.board_id = options.board_id
+                this.selectedBoard.name = options.board_name
+                this.showBoardSelector = false
+            }
+            if (!this.$store.getters.boardLoaded) {
+                console.log("board loading")
+                GET_board_mounted().then(res => {
+                    console.log(res.data.boards)
+                    this.$store.dispatch("setBoardList", {
+                        boards: res.data.boards
+                    })
+                }).catch(err => {
+                    if (this.$store.getters.debug) {
+                        console.log('board mounted', err)
+                    }
+                })
             }
         },
 		data() {
@@ -75,14 +106,27 @@
                 articleForm: {
                     title: "",
                     content: "",
-                    imageList: []
+                    images: []
                 },
                 tmpImageList: [],
                 draftIndex: -1,
-                btnLoading: false
+                btnLoading: false,
+                selectedBoard: {
+                    board_id: 0,
+                    name: "您还未选择板块"
+                },
+                showBoardSelector: true
 			}
 		},
 		methods: {
+            choiceBoardHandler() {
+                // console.log("choice board")
+                this.$refs.selector.showSelector()
+            },
+            boardConfirmHandler(item) {
+                console.log(item)
+                this.selectedBoard = item
+            },
             backClickHandler() {
                 if (this.hasContent) {
                     this.$refs.dialog.showDialog({
@@ -93,12 +137,14 @@
                             this.$store.dispatch({
                                 type: 'updateDraft',
                                 index: this.draftIndex,
-                                draft: this.articleForm
+                                draft: this.articleForm,
+                                board: this.selectedBoard
                             })
                         } else {
                             this.$store.dispatch({
                                 type: 'addDraft',
-                                draft: this.articleForm
+                                draft: this.articleForm,
+                                board: this.selectedBoard
                             })
                         }
                         this.$refs.nav.backPage({toast: "保存成功"})
@@ -125,7 +171,8 @@
                                 // do something
                             }).then(res => {
                                 this.$refs.toast.showToast("图片上传成功")
-                                this.articleForm.imageList.push(this.$store.getters.imageDomain+res.imageURL)
+                                console.log(res.imageURL)
+                                this.articleForm.images.push(this.$store.getters.imageDomain+res.key)
                             }).catch(err => {
                                 this.$refs.toast.showToast("图片上传失败")
                                 if (this.$store.getters.debug) {
@@ -138,7 +185,7 @@
             },
             viewImage(item) {
                 uni.previewImage({
-                	urls: this.articleForm.imageList,
+                	urls: this.articleForm.images,
                 	current: item
                 });
             },
@@ -148,7 +195,7 @@
                     content: "是否删除这张图片?",
                     cancelText: "手滑了"
                 }).then(() => {
-                    this.articleForm.imageList.splice(index, 1)
+                    this.articleForm.images.splice(index, 1)
                     this.tmpImageList.splice(index, 1)
                     this.$refs.toast.showToast("删除成功")
                 }).catch(() => {
@@ -160,11 +207,13 @@
                     this.$refs.modal.showModal("提示", "帖子标题不能为空！")
                 } else if (this.articleForm.content === "") {
                     this.$refs.modal.showModal("提示", "帖子内容不能为空")
-                } else if (this.articleForm.imageList.length != this.tmpImageList.length) {
+                } else if (this.articleForm.images.length != this.tmpImageList.length) {
                     this.$refs.toast.showToast("图片上传中...")
+                } else if (this.selectedBoard.board_id == 0) {
+                    this.$refs.modal.showModal("提示", "你还没有选择要发布到哪一个版块")
                 } else {
                     this.btnLoading = true
-                    POST_editor_publishBtnClick(3, this.articleForm).then(res => {
+                    POST_editor_publishBtnClick(this.selectedBoard.board_id, this.articleForm).then(res => {
                         if (this.draftIndex != -1) {
                             this.$store.dispatch({
                                 type: "deleteDraft",
@@ -181,7 +230,8 @@
                         this.$store.dispatch({
                             type: type,
                             draft: this.articleForm,
-                            index: this.draftIndex
+                            index: this.draftIndex,
+                            board: this.selectedBoard
                         }).then(res => {
                             this.$refs.dialog.showDialog({
                                 title: "提示",
@@ -208,10 +258,20 @@
 		},
         computed: {
             hasContent() {
-                if (!!this.articleForm.title || !!this.articleForm.content || this.articleForm.imageList.length > 0) {
+                if (!!this.articleForm.title || !!this.articleForm.content || this.articleForm.images.length > 0) {
                     return true
                 } else {
                     return false
+                }
+            },
+            boardList() {
+                return this.$store.getters.boardList
+            },
+            boardNameToPublish() {
+                if (this.selectedBoard.board_id == 0) {
+                    return "请选择要发布到哪一个板块"
+                } else {
+                    return "发布到 " + this.selectedBoard.name
                 }
             }
         }

@@ -8,7 +8,7 @@
 	    	</view>
 	    	<view :class="['action', activeIndex == 1 ? 'text-blue':'text-gray']"
                   @click="tabbarClick(1)">
-	    		<view class="cuIcon-search"></view> 搜索
+	    		<view class="cuIcon-similar"></view> 分类
 	    	</view>
 	    	<view class="action text-gray add-action">
 	    		<button class="cu-btn cuIcon-add bg-blue shadow" @click="addPostHandler"></button>
