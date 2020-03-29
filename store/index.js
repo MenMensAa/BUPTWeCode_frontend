@@ -26,7 +26,8 @@ const loginModule = {
         hasToken: state => !!state.token,
         token: state => state.token,
         debug: () => true,
-        imageDomain: () => "http://image.buptwecode.com/"
+        imageDomain: () => "http://image.buptwecode.com/",
+        windowHeight: () => uni.getSystemInfoSync().windowHeight - 64
     }
 }
 

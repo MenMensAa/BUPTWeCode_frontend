@@ -18,8 +18,8 @@
         <template v-else>
             <me-view></me-view>
         </template>
-        <tab-bar @tabbarClick="tabbarClick"></tab-bar>
-        <view class="tabbar-filler"></view>
+        <tab-bar @tabbarClick="tabbarClick" class="my-tabbar"></tab-bar>
+        <view :style="{ height: fillerHeight + 'px' }"></view>
 	</view>
 </template>
 
@@ -33,7 +33,8 @@
 	export default {
 		data() {
 			return {
-				activeIndex: 0
+				activeIndex: 0,
+                fillerHeight: 0,
 			}
 		},
         components: {
@@ -57,6 +58,12 @@
                 }
             }
         },
+        onReady() {
+            let tabbar = uni.createSelectorQuery().select(".my-tabbar")
+            tabbar.boundingClientRect(data => {
+                this.fillerHeight = data.height
+            }).exec()
+        },
 		methods: {
             tabbarClick(index) {
                 this.activeIndex = index
@@ -69,8 +76,5 @@
 .index {
     position: relative;
     min-height: 100%;
-}
-.tabbar-filler {
-    height: 140rpx;
 }
 </style>

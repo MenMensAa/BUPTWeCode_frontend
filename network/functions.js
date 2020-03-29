@@ -46,14 +46,28 @@ export function GET_imageUptoken() {
 // common结束部分
 
 // 专有部分,一般只供单独组件调用
-export function POST_feedback_submitBtnClick(data) {
+export function POST_article_commentBtnClick(article_id, data) {
     let tmp_data = {
+        article_id: article_id,
         ...data
     }
-    console.log(data)
+    return post({
+        url: '/api/comment/add/',
+        data: tmp_data
+    }, true)
+}
+
+export function GET_article_mounted(data) {
+    return get({
+        url: '/api/comment/query/',
+        data: data
+    })
+}
+
+export function POST_feedback_submitBtnClick(data) {
     return post({
         url: '/api/feedback/submit/',
-        data: tmp_data
+        data: data
     }, true)
 }
 
@@ -75,7 +89,6 @@ export function POST_editor_publishBtnClick(board_id, data) {
         board_id: board_id,
         ...data
     }
-    console.log(data)
     return post({
         url: '/api/article/put/',
         data: tmp_data

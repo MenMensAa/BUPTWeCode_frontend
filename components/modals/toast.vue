@@ -17,16 +17,29 @@
                 isShow: false,
                 isReverse: false,
                 content: "",
+                startTimer: null,
+                endTimer: null
             };
         },
         methods: {
+            clear() {
+                this.isShow = false
+                if (!!this.startTimer) {
+                    clearTimeout(this.startTimer)
+                }
+                if (!!this.endTimer) {
+                    clearTimeout(this.endTimer)
+                }
+                this.isReverse = false
+            },
             showToast(content, duration=1400) {
+                this.clear()
                 this.content = content
                 this.isShow = true
-                setTimeout(() => {
+                this.startTimer = setTimeout(() => {
                     this.isReverse = true
                 }, 800+duration)
-                setTimeout(() => {
+                this.endTimer = setTimeout(() => {
                     this.isReverse = false
                     this.isShow = false
                 }, 1600+duration)
@@ -51,19 +64,5 @@
     margin: auto;
     width: 350rpx;
 }
-/* 
-.toast-enter-active,
-.toast-leave-active {
-    transition: 2s ease-out;
-}
- 
-.toast-enter {
-    opacity: 0;
-    transform: scale(1.2);
-}
- 
-.toast-leave-to {
-    opacity: 0;
-    transform: scale(0.8);
-} */
+
 </style>

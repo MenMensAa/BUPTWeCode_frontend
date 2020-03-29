@@ -8,7 +8,7 @@
         <my-toast ref="toast"></my-toast>
         
         <scroll-view scroll-y="true" :scroll-top="scrollTop" :scroll-with-animation="true"
-                     :style="{ height: scrollViewHeight+'px' }" @scroll="scrollHandler"
+                     :style="{ height: scrollViewHeight }" @scroll="scrollHandler"
                      @scrolltolower="loadMoreHandler" class="board-container" show-scrollbar>
             
             <template v-if="pageLoaded">
@@ -113,10 +113,6 @@
             console.log(this.board)
             this.queryNewArticle()
         },
-        onReady() {
-            let res = uni.getSystemInfoSync()
-            this.scrollViewHeight = res.windowHeight - 64
-        },
         onShow() {
             if (this.$store.getters.hasNewMsg) {
                 let message = this.$store.getters.msg
@@ -145,7 +141,6 @@
                 tabbar: ["最新", "精品"],
                 activeTabbar: 0,
                 
-                scrollViewHeight: 0,
                 scrollTop: 0,
                 oldScrollTop: 0,
                 loadStatus: "loading",
@@ -207,6 +202,7 @@
                     this.queryNewArticle()
                 } else {
                     this.loadStatus = "over"
+                    this.$refs.toast.showToast("没有更多帖子")
                 }
             },
             scrollHandler(e) {
@@ -257,6 +253,9 @@
             },
             showGoToTop() {
                 return this.oldScrollTop > 800
+            },
+            scrollViewHeight() {
+                return this.$store.getters.windowHeight + 'px'
             }
         },
         filters: {
