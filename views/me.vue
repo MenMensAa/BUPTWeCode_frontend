@@ -13,15 +13,7 @@
                     <view class="me-signatrue margin-top-sm">{{userInfo.signature | signatureFilter}}</view>
                 </view>
             </view>
-            <!-- <view class="me-body bg-white">
-                <template v-for="(val, index) in serviceList">
-                    <view :key="val.id" class="padding-tb-sm solid-bottom" @click="serviceClick(index)">
-                            <text class="icon-font padding-sm" :class="val.icon"></text>
-                            <text>{{val.name}}</text>
-                            <text class="right-arrow cuIcon-right"></text>
-                    </view>
-                </template>
-            </view> -->
+
             <view class="cu-list menu sm-border card-menu margin-top">
                 <template v-for="(val, index) in serviceList">
                     <view :key="val.id" class="cu-item arrow" @click="serviceClick(index)">
@@ -85,6 +77,7 @@
                                 lang: "zh_CN",
                                 success: (info_res) => {
                                     POST_me_login(info_res.userInfo).then(res => {
+                                        console.log(res.data)
                                         that.$store.commit({
                                             type: 'updateUser',
                                             userInfo: res.data
@@ -192,17 +185,17 @@
     }
 </script>
 
-<style>
+<style lang="less">
 .me-header {
     position: relative;
     overflow: hidden;
     border-radius: 20rpx;
-}
-.me-username {
-    font-size: 36rpx;
-}
-.me-signatrue {
-    color: #d5d5d5;
-    font-style: italic;
+    .me-username {
+        font-size: 36rpx;
+    }
+    .me-signatrue {
+        color: #d5d5d5;
+        font-style: italic;
+    }
 }
 </style>

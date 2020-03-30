@@ -90,23 +90,24 @@
 	}
 </script>
 
-<style>
+<style lang="less">
 .draft-card {
     position: relative;
+    .draft-card-time {
+        position: absolute;
+        bottom: 4px;
+        right: 10px;
+        font-size: 12px;
+        font-style: italic;
+    }
+    .draft-card-del {
+        position: absolute;
+        right: 5px;
+        top: 4px;
+        font-size: 16px;
+    }
 }
-.draft-card-time {
-    position: absolute;
-    bottom: 4px;
-    right: 10px;
-    font-size: 12px;
-    font-style: italic;
-}
-.draft-card-del {
-    position: absolute;
-    right: 5px;
-    top: 4px;
-    font-size: 16px;
-}
+
 .tips {
     text-align: center;
     font-size: 34rpx;

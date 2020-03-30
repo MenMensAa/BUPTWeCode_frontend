@@ -5,6 +5,7 @@ import Modal from './components/modals/modal.vue'
 import Dialog from './components/modals/dialog.vue'
 import Toast from './components/modals/toast.vue'
 import Selector from './components/modals/selector.vue'
+import Menu from './components/modals/menu.vue'
 import cuCustom from './colorui/components/cu-custom.vue'
 
 
@@ -18,6 +19,7 @@ Vue.component('my-dialog', Dialog)
 Vue.component('cu-custom',cuCustom)
 Vue.component('my-toast', Toast)
 Vue.component('my-selector', Selector)
+Vue.component('my-menu', Menu)
 
 const app = new Vue({
     ...App

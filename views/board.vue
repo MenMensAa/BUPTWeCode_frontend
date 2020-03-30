@@ -44,7 +44,6 @@
         <template v-else>
             <view class="cu-list grid col-4">
                 <view class="cu-item" v-for="(item,index) in boardList" :key="index" @click="boardClick(item)">
-                    <!-- <image :src="item.avatar" class="board-avatar" mode="aspectFill"></image> -->
                     <view class="cu-avatar radius board-avatar" :style="{'background-image': 'url('+item.avatar+')'}"></view>
                     <text>{{item.name}}</text>
                 </view>
@@ -105,14 +104,13 @@
     }
 </script>
 
-<style>
+<style lang="less">
 .board-avatar {
     margin: 0 auto;
     display: block;
 }
 .history-avatar {
-    margin: 0 auto;
-    display: block;
+    .board-avatar;
     position: absolute;
     left: 0;
     right: 0;
@@ -130,16 +128,17 @@
     height: 250rpx;
     white-space: nowrap;
     width: 100%;
+    .board-history-view-item {
+        width: 24%;
+        height: 92%;
+        display: inline-block;
+        vertical-align: top;
+        position: relative;
+        border-radius: 13rpx;
+        box-shadow: 0rpx 0rpx 15rpx rgba(0,0,0,0.1)
+    }
 }
-.board-history-view-item {
-    width: 24%;
-    height: 92%;
-    display: inline-block;
-    vertical-align: top;
-    position: relative;
-    border-radius: 13rpx;
-    box-shadow: 0rpx 0rpx 15rpx rgba(0,0,0,0.1)
-}
+
 .history-name {
     text-align: center;
     position: absolute;

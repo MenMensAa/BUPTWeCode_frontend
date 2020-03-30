@@ -52,10 +52,10 @@
                             </view>
                             
                             <view class="padding-tb-sm padding-lr">
-                                <view class="title">
+                                <view class="article-title">
                                     {{item.title}}
                                 </view>
-                                <view class="content text-gray">
+                                <view class="article-content text-gray">
                                     {{item.content}}
                                 </view>
                             </view>
@@ -266,60 +266,64 @@
 	}
 </script>
 
-<style>
-.title {
-    font-size: 35rpx;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
-}
-.content {
-    margin-top: 5rpx;
-    font-size: 28rpx;
-    color: #888;
-    height: 4.8em;
-    overflow: hidden;
-    line-height: 1.6;
-}
+<style lang="less">
+
 .board-container {
     width: 100%;
+    .board-header {
+        position: relative;
+    }
+    .board-avatar {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        margin: auto;
+    }
+    .board-name {
+        font-size: 45rpx;
+    }
+    .board-desc {
+        font-style: italic;
+        margin-top: 25rpx;
+        font-size: 30rpx;
+    }
+    .article-title {
+        font-size: 35rpx;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+    .article-content {
+        margin-top: 5rpx;
+        font-size: 28rpx;
+        color: #888;
+        height: 4.8em;
+        overflow: hidden;
+        line-height: 1.6;
+    }
+    .article-card {
+        margin: 30rpx;
+    }
 }
-.board-header {
-    position: relative;
-}
-.board-avatar {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    margin: auto;
-}
-.board-name {
-    font-size: 45rpx;
-}
-.board-desc {
-    font-style: italic;
-    margin-top: 25rpx;
-    font-size: 30rpx;
-}
+
 .cu-card >.cu-item {
     margin: 0;
 }
-.article-card {
-    margin: 30rpx;
-}
+
+
 .fly-bottom {
     position: fixed;
     right: 7%;
     z-index: 1;
     box-shadow: 0rpx 0rpx 10rpx rgba(0,0,0,0.2);
-}
-.goToTop {
-    bottom: 21%;
-}
-.reload {
-    bottom: 13%;
-}
-.publish {
-    bottom: 5%;
+    &.goToTop {
+        bottom: 21%;
+    }
+    &.reload {
+        bottom: 13%;
+    }
+    &.publish {
+        bottom: 5%;
+    }
 }
 </style>

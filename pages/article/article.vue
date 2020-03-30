@@ -30,9 +30,9 @@
                 				</view>
                 			</view>
                 		</view>
-                		<view class="my-container">
-                			<view class="my-title margin-tb-sm">{{article.title}}</view>
-                			<view class="my-content">{{article.content}}</view>
+                		<view class="article-container">
+                			<view class="article-title margin-tb-sm">{{article.title}}</view>
+                			<view>{{article.content}}</view>
                 		</view>
                 		<view class="grid flex-sub padding-lr col-1">
                             <image v-for="(img, index) in article.images" :key="index" class="my-image margin-tb-sm"
@@ -89,7 +89,7 @@
               :style="{transform: 'translateY('+(inputBarHeaderHeight-inputBarheight)+'px)'}">
             <view class="cu-bar input input-bar-header">
                 <view class="cu-avatar round"
-                      :style="[{ 'backgroundImage': 'url(' + userAvatar + ')'}]">
+                      :style="[{ 'backgroundImage': 'url(' + userInfo.avatar + ')'}]">
                 </view>
             	<view class="action" @click="commentAddIconHandler">
             		<text class="cuIcon-roundaddfill text-grey"></text>
@@ -357,8 +357,8 @@
             }
 		},
         computed: {
-            userAvatar() {
-                return this.$store.getters.userInfo.avatar
+            userInfo() {
+                return this.$store.getters.userInfo
             },
             scrollViewHeight() {
                 return this.$store.getters.windowHeight + 'px'
@@ -406,57 +406,59 @@
 	}
 </script>
 
-<style>
-.cu-list.menu-avatar>.cu-item:after, .cu-list.menu>.cu-item:after {
-    /* border-bottom: 0rpx; */
-}
-.my-image {
-    width: 100%;
-}
-.my-container {
-    padding: 0rpx 30rpx 0rpx 30rpx;
-}
-.my-title {
-    font-size: 40rpx;
-}
+<style lang="less">
 .my-article {
     position: relative;
+    .my-image {
+        width: 100%;
+    }
+    .article-container {
+        padding: 0rpx 30rpx 0rpx 30rpx;
+        .article-title {
+            font-size: 40rpx;
+        }
+    }
+    .follow-btn {
+        position: absolute;
+        top: 30rpx;
+        right: 30rpx;
+        z-index: 2;
+    }
 }
-.follow-btn {
-    position: absolute;
-    top: 30rpx;
-    right: 30rpx;
-    z-index: 2;
-}
+
+
 .input-bar {
     position: fixed;
     bottom: 0;
     width: 100%;
 }
+
 .my-textarea {
     position: fixed;
     bottom: 0;
     width: 100%;
     height: 170rpx;
     z-index: 10;
+    .textarea-container {
+        height: 100%;
+        display: flex;
+        .textarea-input {
+            flex: 4;
+            margin: 20rpx;
+            textarea {
+                margin: 0;
+            }
+        }
+        .textarea-button {
+            flex: 1;
+            .cu-btn {
+                margin: 0 auto;
+            }
+        }
+    }
+    
 }
-.textarea-container {
-    height: 100%;
-    display: flex;
-}
-.textarea-input {
-    flex: 4;
-    margin: 20rpx;
-}
-.cu-form-group textarea {
-    margin: 0;
-}
-.textarea-button {
-    flex: 1;
-}
-.textarea-button .cu-btn {
-    margin: 0 auto;
-}
+
 .my-shadow {
     box-shadow: 0rpx 0rpx 15rpx rgba(0, 0, 0, 0.15);
 }

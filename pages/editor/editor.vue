@@ -278,13 +278,14 @@
 	}
 </script>
 
-<style>
+<style lang="less">
 .editor {
     /* min-height: 100%; */
     overflow: hidden;
+    .editor-textarea {
+        width: 100%;
+        height: 600rpx;
+    }
 }
-.editor-textarea {
-    width: 100%;
-    height: 600rpx
-}
+
 </style>

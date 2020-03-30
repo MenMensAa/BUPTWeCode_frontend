@@ -180,8 +180,7 @@
 </script>
 
 <style>
-	.cu-form-group .title {
-		min-width: calc(4em + 15px);
-	}
-
+.cu-form-group .title {
+    min-width: calc(4em + 15px);
+}
 </style>
