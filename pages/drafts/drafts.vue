@@ -1,9 +1,9 @@
 <template>
 	<view>
-		<cu-custom bgColor="bg-gradual-blue" :isBack="true">
+		<my-nav bgColor="bg-gradual-blue" :isBack="true">
 		    <block slot="backText">返回</block>
 			<block slot="content">草稿箱</block>
-		</cu-custom>
+		</my-nav>
         <my-dialog ref="dialog"></my-dialog>
         <my-modal ref="modal"></my-modal>
         <my-toast ref="toast"></my-toast>

@@ -292,6 +292,54 @@ const articleModule = {
     }
 }
 
+const commentModule = {
+    state: {
+        comment: {},
+        flag: false
+    },
+    mutations: {
+        setComment(state, payload) {
+            state.comment = payload.comment
+            state.flag = true
+        },
+        clearComment(state) {
+            state.comment = {}
+            state.flag = false
+        }
+    },
+    actions: {
+        setComment(context, payload) {
+            return new Promise((resolve, reject) => {
+                try {
+                    context.commit({
+                        type: "setComment",
+                        comment: payload.comment
+                    })
+                    resolve()
+                } catch(err) {
+                    reject(err)
+                }
+            })
+        },
+        clearComment(context) {
+            return new Promise((resolve, reject) => {
+                try {
+                    context.commit({
+                        type: "clearComment"
+                    })
+                    resolve()
+                } catch (err) {
+                    reject(err)
+                }
+            })
+        }
+    },
+    getters: {
+        comment: state => state.comment,
+        hasComment: state => state.flag
+    }
+}
+
 
 const store = new Vuex.Store({
     state: {
@@ -312,7 +360,8 @@ const store = new Vuex.Store({
         drafts: draftsModule,
         message: messageModule,
         board: boardModule,
-        article: articleModule
+        article: articleModule,
+        comment: commentModule
     }
 })
 

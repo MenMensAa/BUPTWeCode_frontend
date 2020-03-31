@@ -1,17 +1,16 @@
 <template>
 	<view class="editor bg-white">
-        <cu-custom bgColor="bg-gradual-blue" :isBack="true" :close="true"
+        <my-nav bgColor="bg-gradual-blue" :isBack="true" :close="true"
                    :autoBack="false" @backClick="backClickHandler" ref="nav">
             <block slot="backText">放弃编辑</block>
         	<block slot="content">发布</block>
-        </cu-custom>
+        </my-nav>
 
         <button class="cu-btn round sm" @click="testBtnHandler">测试按钮</button>
         <my-dialog ref="dialog"></my-dialog>
 		<my-modal ref="modal"></my-modal>
         <my-toast ref="toast"></my-toast>
-        <my-selector ref="selector" :datas="boardList" 
-                     display="name" checked="board_id" @confirm="boardConfirmHandler"></my-selector>
+        <my-selector ref="selector"></my-selector>
         
         <view class="cu-bar bg-white">
         	<view class="action">
@@ -121,11 +120,13 @@
 		methods: {
             choiceBoardHandler() {
                 // console.log("choice board")
-                this.$refs.selector.showSelector()
-            },
-            boardConfirmHandler(item) {
-                console.log(item)
-                this.selectedBoard = item
+                this.$refs.selector.showSelector({
+                    datas: this.boardList,
+                    displayStr: "name",
+                    checkedStr: "board_id"
+                }).then(res => {
+                    this.selectedBoard = res
+                }).catch(() => {})
             },
             backClickHandler() {
                 if (this.hasContent) {

@@ -2,14 +2,14 @@
     <view class="cu-modal bottom-modal" :class="{ 'show': isShow }" @click="hideSelector">
     	<view class="cu-dialog" @click.stop="">
     		<view class="cu-bar bg-white">
-    			<view class="action text-blue" @click="cancelSelector">取消</view>
+    			<view class="action text-blue" @click="hideSelector">取消</view>
     			<view class="action text-green" @tap="confirmSelector">确定</view>
     		</view>
     		<view class="grid padding-sm" :class="['col-'+grim]">
     			<view v-for="(item,index) in datas" class="padding-xs" :key="index">
     				<button class="cu-btn blue lg block" @click="btnClickHandler(item)"
                             :class="[boxClass(item)]"> 
-                        {{item[display]}}
+                        {{item[displayStr]}}
     				</button>
     			</view>
     		</view>
@@ -23,53 +23,55 @@
         data() {
             return {
                 isShow: false,
-                firstClick: false,
-                selectedItem: {}
-            }
-        },
-        props: {
-            datas: {
-                type: Array,
-                default: []
-            },
-            display: String,
-            checked: String,
-            grim: {
-                type: Number,
-                default: 3
+                datas: [],
+                grim: 3,
+                displayStr: "name",
+                checkedStr: "id",
+                selectedItem: {},
+                currentAction: {}
             }
         },
         methods: {
-            showSelector() {
+            showSelector(options={}) {
+                this.datas = options.datas || []
+                this.grim = options.grim || 3
+                this.displayStr = options.displayStr || "name"
+                this.checkedStr = options.checkedStr || "id"
                 this.isShow = true
+                if (!!options.recommand) {
+                    this.selectedItem = this.datas[options.recommand]
+                }
+                return new Promise((resolve, reject) => {
+                    this.currentAction = { resolve, reject }
+                })
             },
             hideSelector() {
                 this.isShow = false
-            },
-            cancelSelector() {
-                this.isShow = false
-                this.$emit("cancel")
+                this.currentAction.reject()
             },
             btnClickHandler(item) {
-                this.firstClick = true
                 this.selectedItem = item
             },
             confirmSelector() {
                 this.isShow = false
-                this.$emit("confirm", this.selectedItem)
-            },
-            setSelectedItem(item) {
-                this.selectedItem = item
+                if (this.hasSelectedItem) {
+                    this.currentAction.resolve(this.selectedItem)
+                } else {
+                    this.currentAction.reject()
+                }
             },
             boxClass(item) {
-                if (this.firstClick) {
-                    if (item[this.checked] == this.selectedItem[this.checked]) {
-                        return 'bg-blue'
-                    }
+                if (item[this.checkedStr] == this.selectedItem[this.checkedStr]) {
+                    return 'bg-blue'
                 }
                 return 'line-blue'
             }
         },
+        computed: {
+            hasSelectedItem() {
+                return JSON.stringify(this.selectedItem) != "{}"
+            }
+        }
     }
 </script>
 

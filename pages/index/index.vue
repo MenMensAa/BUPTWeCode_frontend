@@ -1,8 +1,8 @@
 <template>
 	<view class="index">
-        <cu-custom bgColor="bg-gradual-blue" :isBack="false">
+        <my-nav bgColor="bg-gradual-blue" :isBack="false">
             <block slot="content">微码小窝</block>
-        </cu-custom>
+        </my-nav>
         
         <my-toast ref="toast"></my-toast>
         

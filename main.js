@@ -16,7 +16,7 @@ App.mpType = 'app'
 
 Vue.component('my-modal', Modal)
 Vue.component('my-dialog', Dialog)
-Vue.component('cu-custom',cuCustom)
+Vue.component('my-nav',cuCustom)
 Vue.component('my-toast', Toast)
 Vue.component('my-selector', Selector)
 Vue.component('my-menu', Menu)

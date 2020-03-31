@@ -24,6 +24,10 @@
               "path" : "pages/feedback/feedback",
               "style" : {}
         }
+        ,{
+            "path" : "pages/comment/comment",
+            "style" : {}
+        }
     ],
 	"globalStyle": {
 		"navigationBarTitleText": "uni-app",

@@ -1,9 +1,9 @@
 <template>
 	<view>
-        <cu-custom bgColor="bg-gradual-blue" :isBack="true" class="custom-nav">
+        <my-nav bgColor="bg-gradual-blue" :isBack="true" class="custom-nav">
             <block slot="backText">返回</block>
         	<block slot="content">板块</block>
-        </cu-custom>
+        </my-nav>
         
         <my-toast ref="toast"></my-toast>
         
@@ -144,7 +144,8 @@
                 scrollTop: 0,
                 oldScrollTop: 0,
                 loadStatus: "loading",
-                pageLoading: false
+                pageLoading: false,
+                queryCDing: false
 			}
 		},
 		methods: {
@@ -172,58 +173,57 @@
                 });
             },
             queryNewArticle(reload=false) {
-                this.loadStatus = "loading"
                 this.pageLoading = true
+                this.loadStatus = "loading"
                 GET_board_article(this.queryData).then(res => {
-                    // console.log(res)
-                    if (reload) {
-                        this.articles = res.data.articles
-                    } else {
-                        this.articles.push(...res.data.articles) 
-                    }
                     this.total = res.data.total
-                    console.log(this.articles)
-                }).catch(err => {
-                    if (this.$store.getters.debug) {
-                        console.log("GET board article", err)
-                    }
-                    this.loadStatus = "error"
-                }).finally(() => {
                     if (reload) {
-                        this.$refs.toast.showToast("刷新成功...")
+                        
                     }
-                    this.pageLoading = false
+                    if (res.data.articles.length == 0) {
+                        this.queryCDing = true
+                        setTimeout(() => {
+                            this.queryCDing = false
+                        }, 5000)
+                    } else {
+                        if (reload) {
+                            this.articles = res.data.articles
+                            this.$refs.toast.showToast("刷新成功...") 
+                        } else {
+                            this.articles.push(...res.data.articles)
+                        }
+                        this.curPage += 1
+                    }
+                }).catch(err => {
+                     if (this.$store.getters.debug) {
+                         console.log("GET board article", err)
+                     }
+                     this.loadStatus = "error"
+                }).finally(() => {
+                     this.pageLoading = false
+                     this.loadStatus = "over"
                 })
             },
             loadMoreHandler() {
-                console.log("loadMore")
-                if (!this.noMoreContent) {
-                    this.curPage += 1
+                if (!this.queryCDing) {
                     this.queryNewArticle()
-                } else {
-                    this.loadStatus = "over"
-                    this.$refs.toast.showToast("没有更多帖子")
                 }
             },
             scrollHandler(e) {
-                // console.log(e)
                 this.oldScrollTop = e.detail.scrollTop
             },
             goToTopHandler() {
-                console.log("gototop")
                 this.scrollTop = this.oldScrollTop
                 this.$nextTick(function(){
                     this.scrollTop = 0
                 })
             },
             reloadPageHandler() {
-                console.log("reload page")
                 this.goToTopHandler()
                 this.curPage = 0
                 this.queryNewArticle(true)
             },
             publishHandler() {
-                console.log("publish article")
                 uni.navigateTo({
                     url: '/pages/editor/editor?board_id=' + this.board.board_id + "&board_name=" + this.board.name
                 })
@@ -247,9 +247,6 @@
                 } else {
                     return {}
                 }
-            },
-            noMoreContent() {
-                return this.articles.length == this.total
             },
             showGoToTop() {
                 return this.oldScrollTop > 800

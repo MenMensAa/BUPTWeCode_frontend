@@ -1,13 +1,15 @@
 <template>
 	<view v-if="pageLoaded">
-		<cu-custom bgColor="bg-gradual-blue" :isBack="true"
+		<my-nav bgColor="bg-gradual-blue" :isBack="true"
 		           :autoBack="false" @backClick="backClickHandler" ref="nav">
 		    <block slot="backText">返回</block>
 			<block slot="content">{{boardName}}</block>
-		</cu-custom>
+		</my-nav>
         
         <my-toast ref="toast"></my-toast>
         <my-dialog ref="dialog"></my-dialog>
+        <my-menu ref="menu"></my-menu>
+        <my-selector ref="selector"></my-selector>
         
         <scroll-view scroll-y="true" :style="{ height: scrollViewHeight }"
                      @scrolltolower="loadMoreHandler" style="width: 100%;" show-scrollbar>
@@ -38,7 +40,7 @@
                             <image v-for="(img, index) in article.images" :key="index" class="my-image margin-tb-sm"
                                    :src="img" mode="widthFix" @click="viewImage(article.images, img)"></image>
                 		</view>
-                        <article-bar @operate="operateHandler"></article-bar>
+                        <article-bar @operate="articleOperate"></article-bar>
                     </view>
                 </view>
                 
@@ -50,7 +52,7 @@
                 </view>
                 
                 <view class="cu-list menu-avatar comment solids-top">
-                	<view class="cu-item" v-for="(item, index) in comments" :key="index">
+                	<view class="cu-item" v-for="(item, index) in comments" :key="index" @click="viewCommentClick(item, index)">
                 		<view class="cu-avatar round"
                 		      :style="[{ 'backgroundImage': 'url(' + item.author.avatar + ')'}]">
                 		</view>
@@ -61,7 +63,7 @@
                 			</view>
                             <view class="grid flex-sub padding-lr col-1">
                                 <image v-for="(img, idx) in item.images" :key="idx" class="my-image margin-tb-sm"
-                                       :src="img" mode="widthFix" @click="viewImage(item.images, img)"></image>
+                                       :src="img" mode="widthFix" @click.stop="viewImage(item.images, img)"></image>
                             </view>
                 			<view class="bg-grey padding-sm radius margin-top-sm  text-sm">
                 				<view class="flex">
@@ -72,7 +74,7 @@
                 			<view class="margin-top-sm flex justify-between">
                 				<view class="text-gray text-df">{{index+1}}楼 {{item.created | timeFormatter}}</view>
                 				<view>
-                					<text class="cuIcon-more text-gray"></text>
+                					<text class="cuIcon-more text-gray" @click.stop="commentOperate(item)"></text>
                 				</view>
                 			</view>
                 		</view>
@@ -81,12 +83,11 @@
                 
             </view>
 
-            <view class="cu-load text-gray" :class="[loadStatus]"></view>
+            <view class="cu-load text-gray" :class="[loadStatus]" @click="loadMoreHandler"></view>
         </scroll-view>
         
         
-        <view class="input-bar my-shadow" :animation="animationData" v-show="!textAreaShow"
-              :style="{transform: 'translateY('+(inputBarHeaderHeight-inputBarheight)+'px)'}">
+        <view class="input-bar my-shadow" :animation="animationData" v-show="!textAreaShow">
             <view class="cu-bar input input-bar-header">
                 <view class="cu-avatar round"
                       :style="[{ 'backgroundImage': 'url(' + userInfo.avatar + ')'}]">
@@ -225,7 +226,13 @@
 		},
 		methods: {
 			backClickHandler() {
-                this.$refs.nav.backPage()
+                this.$store.dispatch({
+                    type: "clearArticle"
+                }).then(() => {
+                    this.$refs.nav.backPage()
+                }).catch(err => {
+                    console.log("err in article backpage")
+                }) 
             },
             slideToBottom() {
                 let height = this.inputBarHeight - this.inputBarHeaderHeight
@@ -243,6 +250,37 @@
                     this.slideToTop()
                 }
                 this.isDrug = !this.isDrug
+            },
+            viewCommentClick(item, index) {
+                this.$store.dispatch("setComment", {
+                    comment: item
+                }).then(() => {
+                    let floor = index + 1
+                    let hoster = this.userInfo.uid == this.article.author.author_id
+                    uni.navigateTo({
+                        url: '/pages/comment/comment?floor=' + floor + '&hoster=' + hoster
+                    })
+                }).catch(err => {
+                    if (this.$store.getters.debug) {
+                        console.log("err in article")
+                    }
+                    this.$refs.toast.showToast("好像出了点小错误...")
+                })
+            },
+            commentOperate(item) {
+                if (this.article.author.author_id == this.userInfo.uid || item.author.author_id == this.userInfo.uid) {
+                    this.$refs.menu.showMenu([2, 3]).then(res => {
+                        if (res == 0) {
+                            console.log("report")
+                        } else {
+                            console.log("delete")
+                        }
+                    }).catch(() => {})
+                } else {
+                    this.$refs.menu.showMenu([3]).then(() => {
+                        console.log("report")
+                    }).catch(() => {})
+                }
             },
             viewImage(urls, img) {
                 uni.previewImage({
@@ -291,8 +329,24 @@
                     this.$refs.toast.showToast("取消删除")
                 })
             },
-            operateHandler() {
-                console.log("operate")
+            articleOperate() {
+                if (this.article.author.author_id == this.userInfo.uid) {
+                    this.$refs.menu.showMenu([0, 3]).then(res => {
+                        if (res == 0) {
+                            console.log("share")
+                        } else {
+                            console.log("delete")
+                        }
+                    }).catch(() => {})
+                } else {
+                    this.$refs.menu.showMenu([0, 2]).then(res => {
+                        if (res == 0) {
+                            console.log("share")
+                        } else {
+                            console.log("report")
+                        }
+                    }).catch(() => {})
+                }
             },
             loadMoreHandler() {
                 if (!this.queryCommentCDing) {
@@ -336,7 +390,6 @@
                 GET_article_mounted(this.queryData).then(res => {
                     this.total = res.data.total
                     if (res.data.comments.length == 0) {
-                        this.loadStatus = "over"
                         this.queryCommentCDing = true
                         setTimeout(() => {
                             this.queryCommentCDing = false
@@ -353,6 +406,7 @@
                     this.$refs.toast.showToast("评论加载出错...")
                 }).finally(() => {
                     this.pageLoading = false
+                    this.loadStatus = "over"
                 })
             }
 		},

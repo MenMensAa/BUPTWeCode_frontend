@@ -1,5 +1,5 @@
 <template>
-    <view class="cu-modal" :class="{show: isShow}">
+    <view class="cu-modal" :class="{show: isShow}" @click="hideModal">
     	<view class="cu-dialog">
     		<view class="cu-bar bg-white justify-end">
     			<view class="content">
@@ -19,10 +19,6 @@
 <script>
     export default {
         name: "Modal",
-        // props: {
-        //     title: String,
-        //     content: String
-        // },
         data() {
             return {
                 isShow: false,
