@@ -46,6 +46,22 @@ export function GET_imageUptoken() {
 // common结束部分
 
 // 专有部分,一般只供单独组件调用
+export function POST_comment_subCommentBtnClick(data) {
+    console.log(data)
+    return post({
+        url: '/api/comment/sub/add/',
+        data: data
+    })
+}
+
+export function GET_comment_mounted(data) {
+    console.log(data)
+    return get({
+        url: '/api/comment/sub/query/',
+        data: data
+    })
+}
+
 export function POST_article_commentBtnClick(article_id, data) {
     let tmp_data = {
         article_id: article_id,

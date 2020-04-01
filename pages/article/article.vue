@@ -65,11 +65,8 @@
                                 <image v-for="(img, idx) in item.images" :key="idx" class="my-image margin-tb-sm"
                                        :src="img" mode="widthFix" @click.stop="viewImage(item.images, img)"></image>
                             </view>
-                			<view class="bg-grey padding-sm radius margin-top-sm  text-sm">
-                				<view class="flex">
-                					<view>凯尔：</view>
-                					<view class="flex-sub">妹妹，你在帮他们给黑暗找借口吗?</view>
-                				</view>
+                			<view class="text-blue bg-blue light padding-xs radius margin-top-xs  text-sm" v-if="item.total != 0">
+                				<view>查看{{item.total}}条回复►</view>
                 			</view>
                 			<view class="margin-top-sm flex justify-between">
                 				<view class="text-gray text-df">{{index+1}}楼 {{item.created | timeFormatter}}</view>
@@ -97,8 +94,9 @@
             	</view>
             	<input :adjust-position="false" class="input-background" :placeholder="inputTextDisplay" placeholder-class="text-gray"
                        maxlength="300" :disabled="true" @click="textAreaShow = true"></input>
-                <view class="action">
-                	<text class="cuIcon-favor text-grey"></text>
+                <view class="action" @click="favorArticle">
+                	<text class="cuIcon-favorfill text-yellow" v-if="isFavored"></text>
+                	<text class="cuIcon-favor text-grey" v-else></text>
                 </view>
             	<button class="cu-btn bg-green shadow-blur" :disabled="sendBtnLoading" @click="commentBtnClick">发送</button>
             </view>
@@ -194,11 +192,24 @@
             })
             
         },
+        onShow() {
+            if (this.$store.getters.hasNewMsg) {
+                let message = this.$store.getters.msg
+                if (!!message.times) {
+                    let new_total = this.comments[message.floor-1].total + message.times
+                    this.$set(this.comments[message.floor-1], "total", new_total)
+                    this.$store.dispatch({
+                        type: 'clearMessage'
+                    })
+                }
+            }
+        },
 		data() {
 			return {
                 pageLoaded: false,
                 boardName: "看帖",
 				article: {},
+                isFavored: false,
                 
                 commentForm: {
                     content: "",
@@ -243,6 +254,14 @@
                 this.animation.translateY(0).step()
                 this.animationData = this.animation.export()
             },
+            favorArticle() {
+                if (!this.isFavored) {
+                    this.$refs.toast.showToast("已收藏")
+                } else {
+                    this.$refs.toast.showToast("取消收藏成功")
+                }
+                this.isFavored = !this.isFavored
+            },
             commentAddIconHandler() {
                 if (this.isDrug) {
                     this.slideToBottom()
@@ -268,7 +287,11 @@
                 })
             },
             commentOperate(item) {
-                if (this.article.author.author_id == this.userInfo.uid || item.author.author_id == this.userInfo.uid) {
+                if (item.author.author_id == this.userInfo.uid) {
+                    this.$refs.menu.showMenu([3]).then(() => {
+                        console.log("delete")
+                    }).catch(() => {})
+                } else if (this.isHoster) {
                     this.$refs.menu.showMenu([2, 3]).then(res => {
                         if (res == 0) {
                             console.log("report")
@@ -277,7 +300,7 @@
                         }
                     }).catch(() => {})
                 } else {
-                    this.$refs.menu.showMenu([3]).then(() => {
+                    this.$refs.menu.showMenu([2]).then(() => {
                         console.log("report")
                     }).catch(() => {})
                 }
@@ -330,7 +353,7 @@
                 })
             },
             articleOperate() {
-                if (this.article.author.author_id == this.userInfo.uid) {
+                if (this.isHoster) {
                     this.$refs.menu.showMenu([0, 3]).then(res => {
                         if (res == 0) {
                             console.log("share")
@@ -366,7 +389,7 @@
                         this.slideToBottom()
                         this.isDrug = false
                     }
-                    POST_article_commentBtnClick(this.article.id, this.commentForm).then(res => {
+                    POST_article_commentBtnClick(this.article.article_id, this.commentForm).then(res => {
                         console.log(res)
                         this.$refs.toast.showToast("评论成功!")
                         this.commentForm = {
@@ -389,6 +412,7 @@
                 this.loadStatus = "loading"
                 GET_article_mounted(this.queryData).then(res => {
                     this.total = res.data.total
+                    console.log(res.data.comments)
                     if (res.data.comments.length == 0) {
                         this.queryCommentCDing = true
                         setTimeout(() => {
@@ -424,9 +448,6 @@
                     return "我有一个Dark胆的想法..."
                 }
             },
-            noMoreComments() {
-                return this.comments.length == this.total
-            },
             queryData() {
                 if (this.pageLoaded) {
                     let offset = this.curPage * this.pageSize
@@ -435,13 +456,13 @@
                         return {
                             offset: this.total,
                             limit: limit,
-                            article_id: this.article.id
+                            article_id: this.article.article_id
                         }
                     } else {
                         return {
                             offset: offset,
                             limit: limit,
-                            article_id: this.article.id
+                            article_id: this.article.article_id
                         }
                     }
                 } else {
@@ -450,6 +471,13 @@
             },
             fillerHeight() {
                 return this.inputBarHeaderHeight + 'px'
+            },
+            isHoster() {
+                if (this.pageLoaded) {
+                    return this.article.author.author_id == this.userInfo.uid
+                } else {
+                    return false
+                }
             }
         },
         filters: {
