@@ -6,7 +6,8 @@
 					{{views}}
 				</view>
 				<view class="action">
-					<view class="cuIcon-like"></view>
+					<view class="cuIcon-like" v-if="!liked"></view>
+                    <view class="cuIcon-likefill text-red" v-else></view>
 					{{likes}}
 				</view>
 				<view class="action">
@@ -32,6 +33,10 @@
             likes: {
                 type: Number,
                 default: 0
+            },
+            liked: {
+                type: Boolean,
+                default: false
             },
             comments: {
                 type: Number,

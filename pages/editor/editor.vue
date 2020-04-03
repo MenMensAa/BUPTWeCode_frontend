@@ -56,7 +56,35 @@
                 		</view>
                 	</view>
                 </view>
+                
+                <view class="cu-bar input margin-tb">
+                	
+                	<input v-model="tagForm.content" class="solid-bottom" 
+                           maxlength="10" cursor-spacing="10" placeholder="标签尽量和内容保持一致..."></input>
+                	<view class="action" @click="addTagHandler">
+                		<text class="cuIcon-roundaddfill text-grey"></text>
+                	</view>
+                </view>
+                <view class="flex flex-wrap">
+                    <view class="action">
+                    	<button class="cu-btn cuIcon">
+                    		<!-- <text class="cuIcon-tag text-grey"></text> -->
+                            {{4 - articleForm.tags.length}}
+                    	</button>
+                    </view>
+                    <view class="padding-xs" v-for="(item, index) in articleForm.tags" :key="index">
+                        <view class="cu-capsule round">
+                        	<view class="cu-tag" :class="['bg-'+tagColorHandler(index)]">
+                        		{{item.content}}
+                        	</view>
+                        	<view class="cu-tag" :class="['line-'+tagColorHandler(index)]" @click="delTagHandler(index)">
+                        		<text class="cuIcon-close"></text>
+                        	</view>
+                        </view>
+                    </view>
+                </view>
             </view>
+            
             <button class="cu-btn block bg-green margin-xl lg" type=""
                     :disabled="btnLoading" @click="publishBtnClick">
                 <template v-if="btnLoading">
@@ -105,9 +133,14 @@
                 articleForm: {
                     title: "",
                     content: "",
-                    images: []
+                    images: [],
+                    tags:[]
                 },
                 tmpImageList: [],
+                tagForm: {
+                    content: ""
+                },
+                
                 draftIndex: -1,
                 btnLoading: false,
                 selectedBoard: {
@@ -118,6 +151,24 @@
 			}
 		},
 		methods: {
+            tagColorHandler(index) {
+                return this.ColorList[index].name
+            },
+            delTagHandler(index) {
+                this.$refs.dialog.showDialog({
+                    content: "是否删除该标签？"
+                }).then(() => {
+                    this.tags.splice(index, 1)
+                }).catch(() => {})
+            },
+            addTagHandler() {
+                if (!!this.tagForm.content && this.articleForm.tags.length < 4) {
+                    this.articleForm.tags.push({
+                        content: this.tagForm.content
+                    })
+                    this.tagForm.content = ""
+                }
+            },
             choiceBoardHandler() {
                 // console.log("choice board")
                 this.$refs.selector.showSelector({

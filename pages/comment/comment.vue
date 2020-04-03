@@ -8,6 +8,7 @@
         
         <my-menu ref="menu"></my-menu>
         <my-toast ref="toast"></my-toast>
+        <my-dialog ref="dialog"></my-dialog>
 		
         <scroll-view scroll-y="true" :style="{ height: scrollViewHeight }"
                      @scrolltolower="loadMoreHandler" style="width: 100%;" show-scrollbar>
@@ -63,7 +64,7 @@
             			<view class="margin-top-sm flex justify-between">
             				<view class="text-gray text-df">{{item.created | timeFormatter}}</view>
             				<view>
-            					<text class="cuIcon-more text-gray" @click.stop="commentOperate(item)"></text>
+            					<text class="cuIcon-more text-gray" @click.stop="subCommentOperate(item, index)"></text>
             				</view>
             			</view>
             		</view>
@@ -107,7 +108,7 @@
 
 <script>
     import { stampFormatter } from '../../common/utils.js'
-    import { GET_comment_mounted, POST_comment_subCommentBtnClick } from '../../network/functions.js'
+    import { GET_comment_mounted, POST_comment_subCommentBtnClick, GET_comment_deleteSubComment } from '../../network/functions.js'
     
 	export default {
         onLoad(options) {
@@ -206,17 +207,25 @@
                 	current: img
                 });
             },
-            commentOperate(item) {
+            commentOperate() {
                 if (this.comment.author.author_id == this.userInfo.uid) {
                     this.$refs.menu.showMenu([3]).then(() => {
-                        console.log("delete")
+                        this.$refs.dialog.showDialog({
+                            content: "是否删除该评论?"
+                        }).then(() => {
+                            this.deleteComment()
+                        }).catch(() => {})
                     }).catch(() => {})
                 } else if (this.isHoster) {
                     this.$refs.menu.showMenu([2, 3]).then(res => {
                         if (res == 0) {
                             console.log("report")
                         } else {
-                            console.log("delete")
+                            this.$refs.dialog.showDialog({
+                                content: "是否删除该评论?"
+                            }).then(() => {
+                                this.deleteComment()
+                            }).catch(() => {})
                         }
                     }).catch(() => {})
                 } else {
@@ -225,17 +234,17 @@
                     }).catch(() => {})
                 }
             },
-            subCommentOperate(item) {
+            subCommentOperate(item, index) {
                 if (item.author.author_id == this.userInfo.uid) {
                     this.$refs.menu.showMenu([3]).then(() => {
-                        console.log("delete")
+                        this.deleteSubComment(item, index)
                     }).catch(() => {})
                 } else if (this.isHoster) {
                     this.$refs.menu.showMenu([2, 3]).then(res => {
                         if (res == 0) {
                             console.log("report")
                         } else {
-                            console.log("delete")
+                            this.deleteSubComment(item, index)
                         }
                     }).catch(() => {})
                 } else {
@@ -243,6 +252,30 @@
                         console.log("report")
                     }).catch(() => {})
                 }
+            },
+            deleteSubComment(item, index) {
+                this.$refs.dialog.showDialog({
+                    content: "是否删除该评论?"
+                }).then(() => {
+                    GET_comment_deleteSubComment({
+                        sub_comment_id: item.sub_comment_id
+                    }).then(res => {
+                        this.$refs.toast.showToast("删除评论成功")
+                        this.sub_comments.splice(index, 1)
+                        this.sendSubCommentTime -= 1
+                    }).catch(err => {
+                        this.$refs.toast.showToast("删除评论失败...")
+                        if (this.$store.getters.debug) {
+                            console.log("comment deleteSubComment", err)
+                        }
+                    })
+                }).catch(() => {})
+            },
+            deleteComment(){
+                this.$refs.nav.backPage({
+                    delete: true,
+                    floor: this.commentFloor
+                })
             },
             queryNewSubComment() {
                 this.pageLoading = true

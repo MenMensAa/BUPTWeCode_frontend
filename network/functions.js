@@ -46,8 +46,28 @@ export function GET_imageUptoken() {
 // common结束部分
 
 // 专有部分,一般只供单独组件调用
+export function GET_article_deleteComment(data) {
+    return get({
+        url: "/api/comment/delete/",
+        data: data
+    })
+}
+
+export function GET_comment_deleteSubComment(data) {
+    return get({
+        url: "/api/comment/sub/delete/",
+        data: data
+    })
+}
+
+export function GET_article_likeArticle(data) {
+    return get({
+        url: '/api/article/like/',
+        data: data
+    })
+}
+
 export function POST_comment_subCommentBtnClick(data) {
-    console.log(data)
     return post({
         url: '/api/comment/sub/add/',
         data: data
@@ -55,7 +75,6 @@ export function POST_comment_subCommentBtnClick(data) {
 }
 
 export function GET_comment_mounted(data) {
-    console.log(data)
     return get({
         url: '/api/comment/sub/query/',
         data: data

@@ -40,7 +40,20 @@
                             <image v-for="(img, index) in article.images" :key="index" class="my-image margin-tb-sm"
                                    :src="img" mode="widthFix" @click="viewImage(article.images, img)"></image>
                 		</view>
-                        <article-bar @operate="articleOperate"></article-bar>
+                        
+                        <view class="flex flex-wrap margin-tb" v-if="article.tags.length > 0">
+                            <view class="action">
+                            	<button class="cu-btn cuIcon bg-white">
+                            		<text class="cuIcon-tag text-grey"></text>
+                            	</button>
+                            </view>
+                            <view class="padding-xs" v-for="(tag, idx) in article.tags" :key="idx">
+                                <view class="cu-tag light round" :class="['bg-'+tagColorHandler(idx)]">{{tag.content}}</view>
+                            </view>
+                        </view>
+                        
+                        <article-bar @operate="articleOperate" :comments.sync="article.comments"
+                                     :likes.sync="article.likes" :views="article.views" :liked.sync="article.liked"></article-bar>
                     </view>
                 </view>
                 
@@ -71,7 +84,7 @@
                 			<view class="margin-top-sm flex justify-between">
                 				<view class="text-gray text-df">{{index+1}}楼 {{item.created | timeFormatter}}</view>
                 				<view>
-                					<text class="cuIcon-more text-gray" @click.stop="commentOperate(item)"></text>
+                					<text class="cuIcon-more text-gray" @click.stop="commentOperate(item, index)"></text>
                 				</view>
                 			</view>
                 		</view>
@@ -94,9 +107,9 @@
             	</view>
             	<input :adjust-position="false" class="input-background" :placeholder="inputTextDisplay" placeholder-class="text-gray"
                        maxlength="300" :disabled="true" @click="textAreaShow = true"></input>
-                <view class="action" @click="favorArticle">
-                	<text class="cuIcon-favorfill text-yellow" v-if="isFavored"></text>
-                	<text class="cuIcon-favor text-grey" v-else></text>
+                <view class="action" @click="likeArticle">
+                	<text class="cuIcon-likefill text-red" v-if="article.liked"></text>
+                	<text class="cuIcon-like text-grey" v-else></text>
                 </view>
             	<button class="cu-btn bg-green shadow-blur" :disabled="sendBtnLoading" @click="commentBtnClick">发送</button>
             </view>
@@ -140,7 +153,8 @@
     import { stampFormatter } from '../../common/utils.js'
     import { imageUploader } from '../../common/image_uploader.js'
     import ArticleBar from '../../components/article_bar.vue'
-    import { POST_article_commentBtnClick, GET_article_mounted } from '../../network/functions.js'
+    import { POST_article_commentBtnClick, GET_article_mounted, 
+            GET_article_likeArticle, GET_article_deleteComment } from '../../network/functions.js'
     
 	export default {
         components: {
@@ -195,9 +209,17 @@
         onShow() {
             if (this.$store.getters.hasNewMsg) {
                 let message = this.$store.getters.msg
-                if (!!message.times) {
-                    let new_total = this.comments[message.floor-1].total + message.times
-                    this.$set(this.comments[message.floor-1], "total", new_total)
+                let index = Number(message.floor) - 1
+                console.log(message, index)
+                if (!!message.delete) {
+                    let comment = this.comments[index]
+                    this.deleteComment(comment, index)
+                    this.$store.dispatch({
+                        type: 'clearMessage'
+                    })
+                } else if (!!message.times) {
+                    let new_total = this.comments[index].total + message.times
+                    this.$set(this.comments[index], "total", new_total)
                     this.$store.dispatch({
                         type: 'clearMessage'
                     })
@@ -209,7 +231,6 @@
                 pageLoaded: false,
                 boardName: "看帖",
 				article: {},
-                isFavored: false,
                 
                 commentForm: {
                     content: "",
@@ -218,6 +239,7 @@
                 tmpImageList: [],
                 textAreaShow: false,
                 sendBtnLoading: false,
+                likeBtnLoading: false,
                 
                 pageSize: 10,
                 curPage: 0,
@@ -236,6 +258,9 @@
 			}
 		},
 		methods: {
+            tagColorHandler(index) {
+                return this.ColorList[index].name
+            },
 			backClickHandler() {
                 this.$store.dispatch({
                     type: "clearArticle"
@@ -254,13 +279,34 @@
                 this.animation.translateY(0).step()
                 this.animationData = this.animation.export()
             },
-            favorArticle() {
-                if (!this.isFavored) {
-                    this.$refs.toast.showToast("已收藏")
-                } else {
-                    this.$refs.toast.showToast("取消收藏成功")
+            likeArticle() {
+                if (!this.likeBtnLoading) {
+                    let data = {
+                        like_id: this.article.like_id || "",
+                        article_id: this.article.article_id
+                    }
+                    let count = this.article.liked ? -1 : 1
+                    this.article.liked = !this.article.liked
+                    this.article.likes += count
+                    this.likeBtnLoading = true
+                    GET_article_likeArticle(data).then(res => {
+                        this.article.like_id = res.data.like_id
+                        if (this.article.liked) {
+                            this.$refs.toast.showToast("谢谢你的赞~")
+                        } else {
+                            this.$refs.toast.showToast("取消赞成功")
+                        }
+                    }).catch(err => {
+                        if (this.$store.getters.debug) {
+                            console.log("article favor", err)
+                        }
+                        this.$refs.toast.showToast("出错了...")
+                        this.article.liked = !this.article.liked
+                        this.article.likes -= count
+                    }).finally(() => {
+                        this.likeBtnLoading = false
+                    })
                 }
-                this.isFavored = !this.isFavored
             },
             commentAddIconHandler() {
                 if (this.isDrug) {
@@ -286,17 +332,25 @@
                     this.$refs.toast.showToast("好像出了点小错误...")
                 })
             },
-            commentOperate(item) {
+            commentOperate(item, index) {
                 if (item.author.author_id == this.userInfo.uid) {
                     this.$refs.menu.showMenu([3]).then(() => {
-                        console.log("delete")
+                        this.$refs.dialog.showDialog({
+                            content: "是否删除该评论?"
+                        }).then(() => {
+                            this.deleteComment(item, index)
+                        }).catch(() => {})
                     }).catch(() => {})
                 } else if (this.isHoster) {
                     this.$refs.menu.showMenu([2, 3]).then(res => {
                         if (res == 0) {
                             console.log("report")
                         } else {
-                            console.log("delete")
+                            this.$refs.dialog.showDialog({
+                                content: "是否删除该评论?"
+                            }).then(() => {
+                                this.deleteComment(item, index)
+                            }).catch(() => {})
                         }
                     }).catch(() => {})
                 } else {
@@ -304,6 +358,20 @@
                         console.log("report")
                     }).catch(() => {})
                 }
+            },
+            deleteComment(item, index) {
+                GET_article_deleteComment({
+                    comment_id: item.comment_id
+                }).then(res => {
+                    this.$refs.toast.showToast("删除评论成功")
+                    this.comments.splice(index, 1)
+                    this.article.comments -= 1
+                }).catch(err => {
+                    this.$refs.toast.showToast("删除评论失败...")
+                    if (this.$store.getters.debug) {
+                        console.log("article deleteComment", err)
+                    }
+                })
             },
             viewImage(urls, img) {
                 uni.previewImage({
@@ -397,6 +465,7 @@
                             images: []
                         }
                         this.tmpImageList = []
+                        this.article.comments += 1
                     }).catch(err => {
                         if (this.$store.getters.debug) {
                             console.log("commentBtnClick", err)

@@ -49,6 +49,17 @@
                                         </view>
                                     </view>
                                 </view>
+                                
+                                <view class="flex flex-wrap" v-if="item.tags.length > 0">
+                                    <view class="action">
+                                    	<button class="cu-btn cuIcon bg-white">
+                                    		<text class="cuIcon-tag text-grey"></text>
+                                    	</button>
+                                    </view>
+                                    <view class="padding-xs" v-for="(tag, idx) in item.tags" :key="idx">
+                                        <view class="cu-tag light round" :class="['bg-'+tagColorHandler(idx)]">{{tag.content}}</view>
+                                    </view>
+                                </view>
                             </view>
                             
                             <view class="padding-tb-sm padding-lr">
@@ -68,10 +79,11 @@
                             </view>
                             
                             <view class="text-gray text-sm text-right padding">
-                                <text class="cuIcon-attentionfill margin-lr-xs"></text> 10
-                                <text class="cuIcon-likefill margin-lr-xs"></text> 20
-                                <text class="cuIcon-messagefill margin-lr-xs"></text> 30
+                                <text class="cuIcon-attentionfill margin-lr-xs"></text> {{item.views}}
+                                <text class="cuIcon-likefill margin-lr-xs" :class="{ 'text-red': item.liked }"></text> {{item.likes}}
+                                <text class="cuIcon-messagefill margin-lr-xs"></text> {{item.comments}}
                             </view>
+                            
                         </view>
                     </view>
                    
@@ -152,6 +164,9 @@
 			tabbarClick(index) {
                 this.activeTabbar = index
             },
+            tagColorHandler(index) {
+                return this.ColorList[index].name
+            },
             articleClick(item) {
                 this.$store.dispatch("setArticle", {
                     article: item
@@ -176,10 +191,8 @@
                 this.pageLoading = true
                 this.loadStatus = "loading"
                 GET_board_article(this.queryData).then(res => {
+                    console.log(res)
                     this.total = res.data.total
-                    if (reload) {
-                        
-                    }
                     if (res.data.articles.length == 0) {
                         this.queryCDing = true
                         setTimeout(() => {
@@ -264,6 +277,9 @@
 </script>
 
 <style lang="less">
+.cu-list.menu-avatar>.cu-item:after, .cu-list.menu>.cu-item:after {
+    border-bottom: 0rpx
+}
 
 .board-container {
     width: 100%;
