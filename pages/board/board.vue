@@ -33,7 +33,7 @@
                     </view>
                 </scroll-view>
                 
-                <view class="article-card" v-for="(item, index) in articles" :key="index" @click="articleClick(item)">
+                <view class="article-card" v-for="(item, index) in articles" :key="index" @click="articleClick(item, index)">
                     <view class="cu-card case">
                         <view class="cu-item shadow">
                             <view class="cu-list menu-avatar">
@@ -128,12 +128,16 @@
         onShow() {
             if (this.$store.getters.hasNewMsg) {
                 let message = this.$store.getters.msg
+                if (!!message.delete) {
+                    let index = Number(message.index)
+                    this.articles.splice(index, 1)
+                } 
                 if (!!message.toast) {
                     this.$refs.toast.showToast(message.toast)
-                    this.$store.dispatch({
-                        type: 'clearMessage'
-                    })
                 }
+                this.$store.dispatch({
+                    type: 'clearMessage'
+                })
             }
         },
         onUnload() {
@@ -155,7 +159,7 @@
                 
                 scrollTop: 0,
                 oldScrollTop: 0,
-                loadStatus: "loading",
+                loadStatus: "over",
                 pageLoading: false,
                 queryCDing: false
 			}
@@ -167,12 +171,12 @@
             tagColorHandler(index) {
                 return this.ColorList[index].name
             },
-            articleClick(item) {
+            articleClick(item, index) {
                 this.$store.dispatch("setArticle", {
                     article: item
                 }).then(() => {
                     uni.navigateTo({
-                        url: '/pages/article/article?board_name=' + this.board.name
+                        url: '/pages/article/article?index=' + index
                     })
                 }).catch(err => {
                     this.$refs.toast.showToast("啊哦...好像出错了")
@@ -180,6 +184,7 @@
                         console.log("board article Click", err)
                     }
                 })
+                this.$store.dispatch({                    type: 'addArticleHistory',                    history: this.articles[index],                    board: this.board                })
             },
             viewImage(img, index) {
                 uni.previewImage({
@@ -191,7 +196,7 @@
                 this.pageLoading = true
                 this.loadStatus = "loading"
                 GET_board_article(this.queryData).then(res => {
-                    console.log(res)
+                    // console.log(res)
                     this.total = res.data.total
                     if (res.data.articles.length == 0) {
                         this.queryCDing = true
@@ -207,6 +212,7 @@
                         }
                         this.curPage += 1
                     }
+                    this.loadStatus = "over"
                 }).catch(err => {
                      if (this.$store.getters.debug) {
                          console.log("GET board article", err)
@@ -214,7 +220,6 @@
                      this.loadStatus = "error"
                 }).finally(() => {
                      this.pageLoading = false
-                     this.loadStatus = "over"
                 })
             },
             loadMoreHandler() {
@@ -310,7 +315,7 @@
         margin-top: 5rpx;
         font-size: 28rpx;
         color: #888;
-        height: 4.8em;
+        max-height: 4.8em;
         overflow: hidden;
         line-height: 1.6;
     }

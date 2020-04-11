@@ -5,43 +5,77 @@
         </my-nav>
         
         <my-toast ref="toast"></my-toast>
+        <my-modal ref="modal"></my-modal>
         
-        <template v-if="activeIndex == 0">
+        <!-- <template v-if="activeIndex === 0">
             <home-view></home-view>
         </template>
-        <template v-else-if="activeIndex == 1">
+        <template v-else-if="activeIndex === 1">
             <board-view></board-view>
         </template>
-        <template v-else-if="activeIndex == 2">
-            <message-view></message-view>
+        <template v-else-if="activeIndex === 2">
+            <notify-view></notify-view>
         </template>
         <template v-else>
             <me-view></me-view>
-        </template>
-        <tab-bar @tabbarClick="tabbarClick" class="my-tabbar"></tab-bar>
+        </template> -->
+        <home-view :class="{ hidden: activeIndex != 0 }"></home-view>
+        <board-view :class="{ hidden: activeIndex != 1 }"></board-view>
+        <notify-view :class="{ hidden: activeIndex != 2 }"></notify-view>
+        <me-view :class="{ hidden: activeIndex != 3 }"></me-view>
+        
+        <view class="main-tabbar">
+            <view class="cu-bar tabbar bg-white">
+            	<view :class="['action', activeIndex == 0 ? 'text-blue':'text-gray']"
+                      @click="tabbarClick(0)">
+            		<view class="cuIcon-homefill"></view> 首页
+            	</view>
+            	<view :class="['action', activeIndex == 1 ? 'text-blue':'text-gray']"
+                      @click="tabbarClick(1)">
+            		<view class="cuIcon-similar"></view> 分类
+            	</view>
+            	<view class="action text-gray add-action">
+            		<button class="cu-btn cuIcon-add bg-blue shadow" @click="addPostHandler"></button>
+            		发布
+            	</view>
+            	<view :class="['action', activeIndex == 2 ? 'text-blue':'text-gray']"
+                      @click="tabbarClick(2)">
+            		<view class="cuIcon-message">
+            			<view class="cu-tag badge">99</view>
+            		</view>
+            		消息
+            	</view>
+            	<view :class="['action', activeIndex == 3 ? 'text-blue':'text-gray']"
+                      @click="tabbarClick(3)">
+            		<view class="cuIcon-my">
+            			<view class="cu-tag badge"></view>
+            		</view>
+            		Me
+            	</view>
+            </view>
+        </view>
+        
         <view :style="{ height: fillerHeight + 'px' }"></view>
 	</view>
 </template>
 
 <script>
-    import Tabbar from '../../components/tabbar.vue'
     import Home from '../../views/home.vue'
     import Me from '../../views/me.vue'
-    import Message from '../../views/message.vue'
+    import Notify from '../../views/notify.vue'
     import Board from '../../views/board.vue'
     
 	export default {
 		data() {
 			return {
 				activeIndex: 0,
-                fillerHeight: 0,
+                fillerHeight: 0
 			}
 		},
         components: {
-            'tab-bar': Tabbar,
             'home-view': Home,
             'me-view': Me,
-            'message-view': Message,
+            'notify-view': Notify,
             'board-view': Board
         },
 		onLoad(options) {
@@ -59,7 +93,7 @@
             }
         },
         onReady() {
-            let tabbar = uni.createSelectorQuery().select(".my-tabbar")
+            let tabbar = uni.createSelectorQuery().select(".main-tabbar")
             tabbar.boundingClientRect(data => {
                 this.fillerHeight = data.height
             }).exec()
@@ -67,8 +101,20 @@
 		methods: {
             tabbarClick(index) {
                 this.activeIndex = index
+            },
+            addPostHandler() {
+                if (this.$store.getters.isLogged) {
+                    uni.navigateTo({
+                        url: '/pages/editor/editor'
+                    })
+                } else {
+                    this.$refs.modal.showModal("提示", "请登陆后再发帖哟")
+                }
             }
-		}
+		},
+        computed: {
+
+        }
 	}
 </script>
 
@@ -76,5 +122,13 @@
 .index {
     position: relative;
     min-height: 100%;
+}
+.hidden {
+    display: none;
+}
+.main-tabbar {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
 }
 </style>

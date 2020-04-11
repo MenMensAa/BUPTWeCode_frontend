@@ -28,6 +28,14 @@
             "path" : "pages/comment/comment",
             "style" : {}
         }
+        ,{
+            "path" : "pages/posts/posts",
+            "style" : {}
+        }
+        ,{
+            "path" : "pages/history/history",
+            "style" : {}
+        }
     ],
 	"globalStyle": {
 		"navigationBarTitleText": "uni-app",

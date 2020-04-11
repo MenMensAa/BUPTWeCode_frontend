@@ -1,25 +1,23 @@
 <template>
-		<view class="box">
-			<view class="cu-bar tabbar bg-white">
-				<view class="action">
-					<view class="cuIcon-attention"></view>
-					{{views}}
-				</view>
-				<view class="action">
-					<view class="cuIcon-like" v-if="!liked"></view>
-                    <view class="cuIcon-likefill text-red" v-else></view>
-					{{likes}}
-				</view>
-				<view class="action">
-					<view class="cuIcon-message"></view>
-					{{comments}}
-				</view>
-				<view class="action">
-					<view class="cuIcon-forwardfill" @click="operateClickHandler"></view>
-					操作
-				</view>
-			</view>
+    <view class="cu-bar tabbar bg-white">
+        <view class="action">
+            <view class="cuIcon-attention"></view>
+            {{views}}
         </view>
+        <view class="action" @click="likeClick">
+            <view class="cuIcon-like" v-if="!liked"></view>
+            <view class="cuIcon-likefill text-red" v-else></view>
+            {{likes}}
+        </view>
+        <view class="action">
+            <view class="cuIcon-message"></view>
+            {{comments}}
+        </view>
+        <view class="action">
+            <view class="cuIcon-forwardfill" @click="operateClickHandler"></view>
+            操作
+        </view>
+    </view>
 </template>
 
 <script>
@@ -46,6 +44,9 @@
         methods: {
             operateClickHandler() {
                 this.$emit("operate")
+            },
+            likeClick() {
+                this.$emit("like")
             }
         }
 	}

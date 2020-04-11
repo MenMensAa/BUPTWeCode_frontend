@@ -6,6 +6,7 @@ Vue.use(Vuex)
 const loginModule = {
     state: {
         token: uni.getStorageSync("token") || "",
+        fillerHeight: 0
     },
     mutations: {
         setToken(state, payload) {
@@ -20,6 +21,9 @@ const loginModule = {
             uni.removeStorage({
                 key: "token"
             })
+        },
+        setFillerHeight(state, payload) {
+            state.fillerHeight = payload.fillerHeight
         }
     },
     getters: {
@@ -27,7 +31,8 @@ const loginModule = {
         token: state => state.token,
         debug: () => true,
         imageDomain: () => "http://image.buptwecode.com/",
-        windowHeight: () => uni.getSystemInfoSync().windowHeight - 64
+        windowHeight: () => uni.getSystemInfoSync().windowHeight - 64,
+        fillerHeight: state => state.fillerHeight
     }
 }
 
@@ -340,6 +345,13 @@ const commentModule = {
     }
 }
 
+const articleHistoriesModule = {    state: {        histories: uni.getStorageSync('histories') || []    },    mutations: {        addArticleHistory(state, payload) {
+            let article_id = payload.history.article_id            let history = {                history: payload.history,                board: payload.board            }
+            for (let i = 0; i < state.histories.length; i++) {
+                if (state.histories[i].history.article_id == article_id) {
+                    state.histories.splice(i, 1)
+                }
+            }            state.histories.unshift(history)            uni.setStorageSync('histories', state.histories)        },        deleteArticleHistory(state, payload) {            state.histories.splice(payload.index, 1)            uni.setStorageSync('histories', state.histories)        },        clearArticleHistory(state) {            state.histories = []            uni.setStorageSync('histories', state.histories)        }    },    actions: {        addArticleHistory(context, payload) {            return new Promise((resolve, reject) => {                try {                    context.commit({                        type: 'addArticleHistory',                        history: payload.history,                        board: payload.board                    })                    resolve()                } catch (err) {                    reject(err)                }            })        },        deleteArticleHistory(context, payload) {            return new Promise((resolve, reject) => {                try {                    if (context.state.histories.length <= payload.index) {                        reject("缓存索引出错")                    } else {                        context.commit({                            type: 'deleteArticleHistory',                            index: payload.index                        })                        resolve()                    }                } catch (err) {                    reject(err)                }            })        },        clearArticleHistory(context) {            context.commit({                type: "clearArticleHistory"            })        }    },    getters: {        articleHistories: state => state.histories    }}
 
 const store = new Vuex.Store({
     state: {
@@ -361,7 +373,8 @@ const store = new Vuex.Store({
         message: messageModule,
         board: boardModule,
         article: articleModule,
-        comment: commentModule
+        comment: commentModule,
+        articleHistories: articleHistoriesModule
     }
 })
 

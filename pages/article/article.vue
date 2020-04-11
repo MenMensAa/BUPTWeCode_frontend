@@ -52,7 +52,7 @@
                             </view>
                         </view>
                         
-                        <article-bar @operate="articleOperate" :comments.sync="article.comments"
+                        <article-bar @operate="articleOperate" @like="likeArticle" :comments.sync="article.comments"
                                      :likes.sync="article.likes" :views="article.views" :liked.sync="article.liked"></article-bar>
                     </view>
                 </view>
@@ -69,6 +69,10 @@
                 		<view class="cu-avatar round"
                 		      :style="[{ 'backgroundImage': 'url(' + item.author.avatar + ')'}]">
                 		</view>
+                        <view class="comment-rate action text-grey" @click.stop="rateComment(item, index)">
+                            {{item.rates}} <text class="cuIcon-appreciatefill padding-lr-xs text-red" v-if="item.rated"></text>
+                            <text class="cuIcon-appreciate padding-lr-xs" v-else></text>
+                        </view>
                         <view class="content">
                 			<view class="text-grey">{{item.author.username}}</view>
                 			<view class="text-gray text-content text-df">
@@ -78,8 +82,8 @@
                                 <image v-for="(img, idx) in item.images" :key="idx" class="my-image margin-tb-sm"
                                        :src="img" mode="widthFix" @click.stop="viewImage(item.images, img)"></image>
                             </view>
-                			<view class="text-blue bg-blue light padding-xs radius margin-top-xs  text-sm" v-if="item.total != 0">
-                				<view>查看{{item.total}}条回复►</view>
+                			<view class="text-blue bg-blue light padding-xs radius margin-top-xs  text-sm" v-if="item.sub_comments != 0">
+                				<view>查看{{item.sub_comments}}条回复►</view>
                 			</view>
                 			<view class="margin-top-sm flex justify-between">
                 				<view class="text-gray text-df">{{index+1}}楼 {{item.created | timeFormatter}}</view>
@@ -153,29 +157,27 @@
     import { stampFormatter } from '../../common/utils.js'
     import { imageUploader } from '../../common/image_uploader.js'
     import ArticleBar from '../../components/article_bar.vue'
-    import { POST_article_commentBtnClick, GET_article_mounted, 
-            GET_article_likeArticle, GET_article_deleteComment } from '../../network/functions.js'
+    import { POST_article_commentBtnClick, GET_article_mounted, GET_article_rateComment, POST_report,
+            GET_article_likeArticle, GET_article_deleteComment, GET_article_delBtnClick } from '../../network/functions.js'
     
 	export default {
         components: {
             "article-bar": ArticleBar,
         },
         onLoad(options) {
-            this.boardName = options.board_name
             if (this.$store.getters.hasArticle) {
+                this.articleIndex = options.index
                 this.article = this.$store.getters.article
+                this.boardName = this.article.board.name
                 this.pageLoaded = true
-                console.log(this.article)
                 this.queryNewComment()
+                this.animation = uni.createAnimation({
+                    duration: 500,
+                    timingFunction: 'ease'
+                })
             } else {
-                if (this.$store.getters.debug) {
-                    console.log("err no article in vuex")
-                }
+                console.log("err no article in vuex")
             }
-            this.animation = uni.createAnimation({
-                duration: 500,
-                timingFunction: 'ease'
-            })
         },
         onReady() {
             let p1 = new Promise((resolve, reject) => {
@@ -210,19 +212,28 @@
             if (this.$store.getters.hasNewMsg) {
                 let message = this.$store.getters.msg
                 let index = Number(message.floor) - 1
-                console.log(message, index)
+                let count = 0
                 if (!!message.delete) {
-                    let comment = this.comments[index]
-                    this.deleteComment(comment, index)
+                    this.comments.splice(index, 1)
+                    this.article.comments -= 1
+                    this.total -= 1
                     this.$store.dispatch({
                         type: 'clearMessage'
                     })
                 } else if (!!message.times) {
-                    let new_total = this.comments[index].total + message.times
-                    this.$set(this.comments[index], "total", new_total)
+                    if (message.rated != this.comments[index].rated) {
+                        count = message.rated ? 1 : -1
+                    }
+                    this.comments[index].rates += count
+                    this.comments[index].rated = message.rated
+                    let new_total = this.comments[index].sub_comments + message.times
+                    this.$set(this.comments[index], "sub_comments", new_total)
                     this.$store.dispatch({
                         type: 'clearMessage'
                     })
+                }
+                if (!!message.toast) {
+                    this.$refs.toast.showToast(message.toast)
                 }
             }
         },
@@ -231,6 +242,7 @@
                 pageLoaded: false,
                 boardName: "看帖",
 				article: {},
+                articleIndex: 0,
                 
                 commentForm: {
                     content: "",
@@ -240,6 +252,7 @@
                 textAreaShow: false,
                 sendBtnLoading: false,
                 likeBtnLoading: false,
+                rateBtnLoading: false,
                 
                 pageSize: 10,
                 curPage: 0,
@@ -282,30 +295,62 @@
             likeArticle() {
                 if (!this.likeBtnLoading) {
                     let data = {
-                        like_id: this.article.like_id || "",
                         article_id: this.article.article_id
                     }
                     let count = this.article.liked ? -1 : 1
                     this.article.liked = !this.article.liked
                     this.article.likes += count
                     this.likeBtnLoading = true
-                    GET_article_likeArticle(data).then(res => {
-                        this.article.like_id = res.data.like_id
+                    GET_article_likeArticle(data).then(() => {
                         if (this.article.liked) {
                             this.$refs.toast.showToast("谢谢你的赞~")
                         } else {
                             this.$refs.toast.showToast("取消赞成功")
                         }
                     }).catch(err => {
-                        if (this.$store.getters.debug) {
-                            console.log("article favor", err)
+                        if (err.code == 404) {
+                            this.$refs.toast.showToast("该文章已被删除...")
+                        } else {
+                            if (this.$store.getters.debug) {
+                                console.log("article favor", err)
+                            }
+                            this.$refs.toast.showToast("出错了...")
                         }
-                        this.$refs.toast.showToast("出错了...")
                         this.article.liked = !this.article.liked
                         this.article.likes -= count
                     }).finally(() => {
                         this.likeBtnLoading = false
                     })
+                }
+            },
+            rateComment(item, index) {
+                console.log("rate", item)
+                if (!this.rateBtnLoading) {
+                    let data = {
+                        comment_id: item.comment_id
+                    }
+                    let count = item.rated ? -1 : 1
+                    item.rated = !item.rated
+                    item.rates += count
+                    this.rateBtnLoading = true
+                    GET_article_rateComment(data).then(() => {
+                        
+                    }).catch(err => {
+                        item.rated = !item.rated
+                        item.rates -= count
+                        if (err.code == 404) {
+                            this.$refs.toast.showToast("该评论不存在...")
+                        } else {
+                            this.$refs.toast.showToast("出错了...")
+                            if (this.$store.getters.debug) {
+                                console.log("rate comment", err)
+                            }
+                        }
+                    }).finally(() => {
+                        this.rateBtnLoading = false
+                    })
+                } else {
+                    this.$refs.toast.showToast("手速太快了...慢点")
                 }
             },
             commentAddIconHandler() {
@@ -321,9 +366,9 @@
                     comment: item
                 }).then(() => {
                     let floor = index + 1
-                    let hoster = this.userInfo.uid == this.article.author.author_id
+                    let host = this.userInfo.uid == this.article.author.author_id
                     uni.navigateTo({
-                        url: '/pages/comment/comment?floor=' + floor + '&hoster=' + hoster
+                        url: '/pages/comment/comment?floor=' + floor + '&host=' + host
                     })
                 }).catch(err => {
                     if (this.$store.getters.debug) {
@@ -344,7 +389,7 @@
                 } else if (this.isHoster) {
                     this.$refs.menu.showMenu([2, 3]).then(res => {
                         if (res == 0) {
-                            console.log("report")
+                            this.reportHandler(4, item.comment_id)
                         } else {
                             this.$refs.dialog.showDialog({
                                 content: "是否删除该评论?"
@@ -355,7 +400,7 @@
                     }).catch(() => {})
                 } else {
                     this.$refs.menu.showMenu([2]).then(() => {
-                        console.log("report")
+                        this.reportHandler(4, item.comment_id)
                     }).catch(() => {})
                 }
             },
@@ -366,6 +411,7 @@
                     this.$refs.toast.showToast("删除评论成功")
                     this.comments.splice(index, 1)
                     this.article.comments -= 1
+                    this.total -= 1
                 }).catch(err => {
                     this.$refs.toast.showToast("删除评论失败...")
                     if (this.$store.getters.debug) {
@@ -395,7 +441,6 @@
                                 // do something
                             }).then(res => {
                                 this.$refs.toast.showToast("图片上传成功")
-                                console.log(res.imageURL)
                                 this.commentForm.images.push(this.$store.getters.imageDomain+res.key)
                             }).catch(err => {
                                 this.$refs.toast.showToast("图片上传失败")
@@ -426,7 +471,7 @@
                         if (res == 0) {
                             console.log("share")
                         } else {
-                            console.log("delete")
+                            this.deleteArticle()
                         }
                     }).catch(() => {})
                 } else {
@@ -434,10 +479,77 @@
                         if (res == 0) {
                             console.log("share")
                         } else {
-                            console.log("report")
+                            this.reportHandler(2, this.article.article_id)
                         }
                     }).catch(() => {})
                 }
+            },
+            reportHandler(category, link_id) {
+                this.$refs.selector.showSelector({
+                    datas: [
+                        {
+                            id: 1,
+                            name: "违规信息"
+                        },
+                        {
+                            id: 2,
+                            name: "水贴"
+                        },
+                        {
+                            id: 3,
+                            name: "攻击辱骂"
+                        },
+                        {
+                            id: 4,
+                            name: "广告内容"
+                        },
+                        {
+                            id: 5,
+                            name: "其他"
+                        }
+                    ],
+                    displayStr: "name",
+                    checkedStr: "id"
+                }).then(res => {
+                    POST_report({
+                        link_id: link_id,
+                        category: category,
+                        reason: res.name
+                    }).then(() => {
+                        this.$refs.toast.showToast("举报成功")
+                    }).catch(err => {
+                        if (err.code == 403) {
+                            this.$refs.toast.showToast("您已经举报过了...")
+                        } else {
+                            this.$refs.toast.showToast("举报失败...")
+                            if (this.$store.getters.debug) {
+                                console.log("reportHandler", err)
+                            }
+                        }
+                    })
+                }).catch(() => {})
+            },
+            deleteArticle() {
+                this.$refs.dialog.showDialog({
+                	"title": "提示",
+                	"content": "是否删除该文章？"
+                }).then(() => {
+                    let data = {
+                    	article_id: this.article.article_id
+                    }
+                	GET_article_delBtnClick(data).then(res => {
+                		this.$refs.nav.backPage({
+                            delete: true,
+                            index: this.articleIndex,
+                            toast: "删除成功..."
+                        })
+                	}).catch(err => {
+                		this.$refs.modal.showModal("提示", "删除失败...")
+                		if (this.$store.getters.debug) {
+                			console.log('management delBtnClick', err)
+                		}
+                	})
+                }).catch(() => {})
             },
             loadMoreHandler() {
                 if (!this.queryCommentCDing) {
@@ -452,13 +564,11 @@
                     this.$refs.toast.showToast("图片上传中...请稍后再试")
                 } else {
                     this.sendBtnLoading = true
-                    console.log(this.commentForm)
                     if (this.isDrug) {
                         this.slideToBottom()
                         this.isDrug = false
                     }
                     POST_article_commentBtnClick(this.article.article_id, this.commentForm).then(res => {
-                        console.log(res)
                         this.$refs.toast.showToast("评论成功!")
                         this.commentForm = {
                             content: "",
@@ -467,10 +577,14 @@
                         this.tmpImageList = []
                         this.article.comments += 1
                     }).catch(err => {
-                        if (this.$store.getters.debug) {
-                            console.log("commentBtnClick", err)
+                        if (err.code == 404) {
+                            this.$refs.toast.showToast("该文章已被删除...")
+                        } else {
+                            if (this.$store.getters.debug) {
+                                console.log("commentBtnClick", err)
+                            }
+                            this.$refs.toast.showToast("啊啦...评论失败了呢")
                         }
-                        this.$refs.toast.showToast("啊啦...评论失败了呢")
                     }).finally(() => {
                         this.sendBtnLoading = false
                     })
@@ -480,8 +594,9 @@
                 this.pageLoading = true
                 this.loadStatus = "loading"
                 GET_article_mounted(this.queryData).then(res => {
+                    console.log(res)
+                    console.log(this.article)
                     this.total = res.data.total
-                    console.log(res.data.comments)
                     if (res.data.comments.length == 0) {
                         this.queryCommentCDing = true
                         setTimeout(() => {
@@ -491,15 +606,23 @@
                         this.comments.push(...res.data.comments)
                         this.curPage += 1
                     }
+                    this.loadStatus = "over"
                 }).catch(err => {
-                    if (this.$store.getters.debug) {
-                        console.log("article mounted", err)
+                    if (err.code == 404) {
+                        this.$refs.nav.backPage({
+                            delete: true,
+                            index: this.articleIndex,
+                            toast: "该文章已被删除..."
+                        })
+                    } else {
+                        if (this.$store.getters.debug) {
+                            console.log("article mounted", err)
+                        }
+                        this.loadStatus = "error"
+                        this.$refs.toast.showToast("评论加载出错...")
                     }
-                    this.loadStatus = "error"
-                    this.$refs.toast.showToast("评论加载出错...")
                 }).finally(() => {
                     this.pageLoading = false
-                    this.loadStatus = "over"
                 })
             }
 		},
@@ -573,6 +696,12 @@
         position: absolute;
         top: 30rpx;
         right: 30rpx;
+        z-index: 2;
+    }
+    .comment-rate {
+        position: absolute;
+        top: 30rpx;
+        font-size: 30rpx;
         z-index: 2;
     }
 }
