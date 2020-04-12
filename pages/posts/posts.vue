@@ -15,7 +15,7 @@
 		</view>
 
 		<scroll-view scroll-y="true" :scroll-top="scrollTop" :scroll-with-animation="true" :style="{ height: scrollViewHeight+'px' }"
-		 @scroll="scrollHandler" @scrolltolower="loadMoreHandler" class="board-container" show-scrollbar>
+		 @scroll="scrollHandler" @scrolltolower="loadMoreHandler" show-scrollbar>
 			<view class="article-card" v-for="(item, index) in articles" :key="index" @click="myArticleClick(item, index)">
 				<view class="cu-card case">
 					<view class="cu-item shadow">
@@ -172,7 +172,7 @@
 					if (this.$store.getters.debug) {
 						console.log("GET my article", err)
 					}
-					this.loadStatus = "error"
+					this.loadStatus = "erro"
 				})
 			},
 			loadMoreHandler() {
@@ -190,14 +190,12 @@
 				this.oldScrollTop = e.detail.scrollTop
 			},
 			goToTopHandler() {
-				console.log("gototop")
 				this.scrollTop = this.oldScrollTop
 				this.$nextTick(function() {
 					this.scrollTop = 0
 				})
 			},
 			reloadPageHandler() {
-				console.log("reload page")
 				this.goToTopHandler()
 				this.curPage = 0
 				this.queryNewArticle(true)

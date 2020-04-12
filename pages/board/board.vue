@@ -217,7 +217,7 @@
                      if (this.$store.getters.debug) {
                          console.log("GET board article", err)
                      }
-                     this.loadStatus = "error"
+                     this.loadStatus = "erro"
                 }).finally(() => {
                      this.pageLoading = false
                 })
@@ -320,7 +320,7 @@
         line-height: 1.6;
     }
     .article-card {
-        margin: 30rpx;
+        margin: 20rpx;
     }
 }
 

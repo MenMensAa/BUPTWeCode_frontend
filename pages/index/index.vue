@@ -7,22 +7,22 @@
         <my-toast ref="toast"></my-toast>
         <my-modal ref="modal"></my-modal>
         
-        <!-- <template v-if="activeIndex === 0">
+        <template v-if="activeIndex === 0">
             <home-view></home-view>
         </template>
         <template v-else-if="activeIndex === 1">
             <board-view></board-view>
         </template>
         <template v-else-if="activeIndex === 2">
-            <notify-view></notify-view>
+            <notify-view @change="countChangeHandler"></notify-view>
         </template>
         <template v-else>
             <me-view></me-view>
-        </template> -->
-        <home-view :class="{ hidden: activeIndex != 0 }"></home-view>
+        </template>
+        <!-- <home-view :class="{ hidden: activeIndex != 0 }"></home-view>
         <board-view :class="{ hidden: activeIndex != 1 }"></board-view>
-        <notify-view :class="{ hidden: activeIndex != 2 }"></notify-view>
-        <me-view :class="{ hidden: activeIndex != 3 }"></me-view>
+        <notify-view :class="{ hidden: activeIndex != 2 }" @change="countChangeHandler"></notify-view>
+        <me-view :class="{ hidden: activeIndex != 3 }"></me-view> -->
         
         <view class="main-tabbar">
             <view class="cu-bar tabbar bg-white">
@@ -41,15 +41,13 @@
             	<view :class="['action', activeIndex == 2 ? 'text-blue':'text-gray']"
                       @click="tabbarClick(2)">
             		<view class="cuIcon-message">
-            			<view class="cu-tag badge">99</view>
+            			<view class="cu-tag badge"  v-if="newCount > 0">{{newCount}}</view>
             		</view>
             		消息
             	</view>
             	<view :class="['action', activeIndex == 3 ? 'text-blue':'text-gray']"
                       @click="tabbarClick(3)">
-            		<view class="cuIcon-my">
-            			<view class="cu-tag badge"></view>
-            		</view>
+            		<view class="cuIcon-my"></view>
             		Me
             	</view>
             </view>
@@ -64,12 +62,15 @@
     import Me from '../../views/me.vue'
     import Notify from '../../views/notify.vue'
     import Board from '../../views/board.vue'
+    import { GET_notify_rotation } from '../../network/functions.js'
     
 	export default {
 		data() {
 			return {
 				activeIndex: 0,
-                fillerHeight: 0
+                fillerHeight: 0,
+                newCount: 0,
+                timer: null
 			}
 		},
         components: {
@@ -79,7 +80,7 @@
             'board-view': Board
         },
 		onLoad(options) {
-            
+            // console.log("load")
 		},
         onShow() {
             if (this.$store.getters.hasNewMsg) {
@@ -91,6 +92,18 @@
                     })
                 }
             }
+            GET_notify_rotation().then(res => {
+                this.newCount = res.data.new
+            })
+        },
+        onUnload() {
+            console.log("unload")
+        },
+        onHide() {
+            console.log("onhide")
+            // if (this.timer != null) {
+            //     clearInterval(this.timer)
+            // }
         },
         onReady() {
             let tabbar = uni.createSelectorQuery().select(".main-tabbar")
@@ -110,6 +123,9 @@
                 } else {
                     this.$refs.modal.showModal("提示", "请登陆后再发帖哟")
                 }
+            },
+            countChangeHandler(newCount) {
+                this.newCount = newCount
             }
 		},
         computed: {

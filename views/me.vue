@@ -54,7 +54,7 @@
                 serviceList: [
                     { name: "浏览历史", icon: "cuIcon-time", dest: "/pages/history/history" },
                     { name: "帖子管理", icon: "cuIcon-form", dest: "/pages/posts/posts" },
-                    { name: "赞过的帖子", icon: "cuIcon-like" },
+                    { name: "赞过的帖子", icon: "cuIcon-like", dest: "/pages/like/like" },
                     { name: "草稿箱", icon: "cuIcon-edit", dest: "/pages/drafts/drafts" },
                     { name: "反馈", icon: "cuIcon-service", dest: "/pages/feedback/feedback"}
                 ],

@@ -60,7 +60,6 @@
         name: "Board",
         mounted() {
             if (!this.$store.getters.boardLoaded) {
-                console.log("board loading")
                 GET_board_mounted().then(res => {
                     console.log(res.data.boards)
                     this.$store.dispatch("setBoardList", {

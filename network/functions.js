@@ -53,6 +53,13 @@ export function POST_report(data) {
 // common结束部分
 
 // 专有部分,一般只供单独组件调用
+export function GET_notify_rotation(data) {
+    return get({
+        url: "/api/user/rotation/",
+        data: data
+    })
+}
+
 export function GET_notify_pointedArticle(data) {
     return get({
         url: "/api/article/pointed/",
@@ -63,6 +70,13 @@ export function GET_notify_pointedArticle(data) {
 export function GET_notify_pointedComment(data) {
     return get({
         url: "/api/comment/pointed/",
+        data: data
+    })
+}
+
+export function GET_notify_unnotify(data) {
+    return get({
+        url: "/api/user/unnotify/",
         data: data
     })
 }

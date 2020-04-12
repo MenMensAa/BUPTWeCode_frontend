@@ -618,7 +618,7 @@
                         if (this.$store.getters.debug) {
                             console.log("article mounted", err)
                         }
-                        this.loadStatus = "error"
+                        this.loadStatus = "erro"
                         this.$refs.toast.showToast("评论加载出错...")
                     }
                 }).finally(() => {

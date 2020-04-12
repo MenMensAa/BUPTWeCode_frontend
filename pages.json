@@ -36,6 +36,14 @@
             "path" : "pages/history/history",
             "style" : {}
         }
+        ,{
+            "path" : "pages/like/like",
+            "style" : {}
+        }
+        ,{
+            "path" : "pages/profile/profile",
+            "style" : {}
+        }
     ],
 	"globalStyle": {
 		"navigationBarTitleText": "uni-app",

@@ -2,14 +2,15 @@
     <view>
         <my-toast ref="toast"></my-toast>
         
-        <scroll-view scroll-y="true" :style="{ height: scrollViewHeight }"
-                     @scrolltolower="loadMoreHandler" style="width: 100%;" show-scrollbar>
+        <scroll-view scroll-y="true" :style="{ height: scrollViewHeight }" :scroll-top="scrollTop" :scroll-with-animation="true"
+                     @scroll="scrollHandler" @scrolltolower="loadMoreHandler">
             
             <view class="cu-list menu-avatar comment solids-top">
             	<view class="cu-item" v-for="(item, index) in notifications" :key="index" @click="notifyClick(item)">
             		<view class="cu-avatar round"
             		      :style="[{ 'backgroundImage': 'url(' + item.sender.avatar + ')'}]">
             		</view>
+                    <view v-if="!item.visited" class="notify-spot bg-red"></view>
                     <view class="content">
             			<view class="text-grey">
                             {{item.sender.username}}
@@ -29,14 +30,19 @@
             	</view>
             </view>
             
-            
         <view class="cu-load text-gray" :class="[loadStatus]" @click="loadMoreHandler"></view>
         </scroll-view>
+        
+        <button class="cu-btn cuIcon reload lg fly-bottom bg-white"
+                @click.stop="reloadPageHandler" :disabled="pageLoading">
+        	<text class="cuIcon-refresh"  :class="{'cuIconfont-spin': pageLoading}"></text>
+        </button>
     </view>
 </template>
 
 <script>
-    import { GET_notify_mounted, GET_notify_pointedArticle, GET_notify_pointedComment } from "../network/functions.js"
+    import { GET_notify_mounted, GET_notify_pointedArticle, 
+             GET_notify_pointedComment, GET_notify_unnotify } from "../network/functions.js"
     import { stampFormatter } from '../common/utils.js'
     
     export default {
@@ -47,23 +53,29 @@
         data() {
             return {
                 notifications: [],
+                newCount: 0,
                 
                 pageSize: 10,
                 curPage: 0,
                 total: -1,
                 
+                scrollTop: 0,
+                oldScrollTop: 0,
+                
                 pageLoading: false,
-                loadStatus: "loading",
+                loadStatus: "over",
                 queryCDing: false
             }
         },
         methods: {
-            queryNewData() {
+            queryNewData(reload=false) {
                 this.pageLoading = true
                 this.loadStatus = "loading"
                 GET_notify_mounted(this.queryData).then(res => {
                     console.log(res.data)
                     this.total = res.data.total
+                    this.newCount = res.data.new
+                    this.$emit("change", this.newCount)
                     this.loadStatus = "over"
                     if (res.data.notifications.length == 0) {
                         this.queryCDing = true
@@ -71,29 +83,67 @@
                             this.queryCDing = false
                         }, 5000)
                     } else {
-                        this.notifications.push(...res.data.notifications)
+                        if (reload) {
+                            this.notifications = res.data.notifications
+                            this.$refs.toast.showToast("刷新成功")
+                        } else {
+                            this.notifications.push(...res.data.notifications)
+                        }
                         this.curPage += 1
                     }
                 }).catch(err => {
                     if (this.$store.getters.debug) {
                         console.log("notify", err)
                     }
-                    this.loadStatus = "error"
+                    this.loadStatus = "erro"
                 }).finally(() => {
                     this.pageLoading = false
                 })
             },
             notifyClick(item) {
-                if (item.category == 1) {
-                    this.navigateToArticle(item.link_id)
+                if (!item.visited) {
+                    console.log(item)
+                    GET_notify_unnotify({
+                        notify_id: item.notify_id
+                    }).then(() => {
+                        item.visited = true
+                        this.newCount -= 1
+                        this.$emit("change", this.newCount)
+                    }).catch(err => {
+                        console.log(err)
+                    }).finally(() => {
+                        if (item.category == 1) {
+                            this.navigateToArticle(item.link_id)
+                        } else {
+                            this.navigateToComment(item.link_id)
+                        }
+                    })
                 } else {
-                    this.navigateToComment(item.link_id)
+                    if (item.category == 1) {
+                        this.navigateToArticle(item.link_id)
+                    } else {
+                        this.navigateToComment(item.link_id)
+                    }
                 }
             },
             loadMoreHandler() {
                 if (!this.queryCDing) {
                     this.queryNewData()
                 }
+            },
+            scrollHandler(e) {
+            	this.oldScrollTop = e.detail.scrollTop
+            },
+            goToTopHandler() {
+            	this.scrollTop = this.oldScrollTop
+            	this.$nextTick(function() {
+            		this.scrollTop = 0
+            	})
+            },
+            reloadPageHandler() {
+            	this.goToTopHandler()
+            	this.curPage = 0
+            	this.queryNewData(true)
             },
             navigateToArticle(article_id) {
                 GET_notify_pointedArticle({
@@ -174,4 +224,22 @@
 </script>
 
 <style>
+.notify-spot {
+    position: absolute;
+    top: 10%;
+    height: 16rpx;
+    width: 16rpx;
+    border-radius: 16rpx;
+}
+
+.fly-bottom {
+    position: fixed;
+    right: 7%;
+    z-index: 1;
+    box-shadow: 0rpx 0rpx 10rpx rgba(0, 0, 0, 0.2);
+}
+
+.reload {
+    bottom: 10%;
+}
 </style>
