@@ -15,7 +15,7 @@
                      @scrolltolower="loadMoreHandler" style="width: 100%;" show-scrollbar>
                      
             <view class="my-article">
-                <button class="cu-btn bg-green shadow follow-btn">关注</button>
+                <!-- <button class="cu-btn bg-green shadow follow-btn">关注</button> -->
                 <view class="cu-card dynamic no-card">
                 	<view class="cu-item shadow">
                 		<view class="cu-list menu-avatar">
@@ -91,6 +91,9 @@
                 					<text class="cuIcon-more text-gray" @click.stop="commentOperate(item, index)"></text>
                 				</view>
                 			</view>
+                            <view class="my-signatrue">
+                                {{'"' + item.author.signature + '"'}}
+                            </view>
                 		</view>
                 	</view>
                 </view>
@@ -172,7 +175,7 @@
                 this.pageLoaded = true
                 this.queryNewComment()
                 this.animation = uni.createAnimation({
-                    duration: 500,
+                    duration: 200,
                     timingFunction: 'ease'
                 })
             } else {
@@ -198,13 +201,14 @@
             })
             
             Promise.all([p1, p2]).then(() => {
-                let animation = uni.createAnimation({
-                    duration: 0,
-                    timingFunction: 'linear'
-                })
-                let height = this.inputBarHeight - this.inputBarHeaderHeight
-                animation.translateY(height).step()
-                this.animationData = animation.export()
+                // let animation = uni.createAnimation({
+                //     duration: 200,
+                //     timingFunction: 'linear'
+                // })
+                // let height = this.inputBarHeight - this.inputBarHeaderHeight
+                // animation.translateY(height).step()
+                // this.animationData = animation.export()
+                this.slideToBottom()
             })
             
         },
@@ -276,12 +280,20 @@
             },
 			backClickHandler() {
                 this.$store.dispatch({
-                    type: "clearArticle"
+                    type: 'addArticleHistory',
+                    article: this.article,
                 }).then(() => {
                     this.$refs.nav.backPage()
                 }).catch(err => {
-                    console.log("err in article backpage")
-                }) 
+                    console.log("err in article backpage", err)
+                })
+                // this.$store.dispatch({
+                //     type: "clearArticle"
+                // }).then(() => {
+                //     this.$refs.nav.backPage()
+                // }).catch(err => {
+                //     console.log("err in article backpage")
+                // }) 
             },
             slideToBottom() {
                 let height = this.inputBarHeight - this.inputBarHeaderHeight
@@ -324,7 +336,6 @@
                 }
             },
             rateComment(item, index) {
-                console.log("rate", item)
                 if (!this.rateBtnLoading) {
                     let data = {
                         comment_id: item.comment_id
@@ -429,7 +440,7 @@
             	uni.chooseImage({
             		count: 4 - this.tmpImageList.length, //默认9
             		sizeType: ['original', 'compressed'], //可以指定是原图还是压缩图，默认二者都有
-            		sourceType: ['album'], //从相册选择
+            		// sourceType: ['album'], //从相册选择
             		success: (res) => {
             			if (this.tmpImageList.length != 0) {
             				this.tmpImageList = this.tmpImageList.concat(res.tempFilePaths)
@@ -703,6 +714,11 @@
         top: 30rpx;
         font-size: 30rpx;
         z-index: 2;
+    }
+    .my-signatrue {
+        color: #d5d5d5;
+        font-style: italic;
+        font-size: 24rpx;
     }
 }
 

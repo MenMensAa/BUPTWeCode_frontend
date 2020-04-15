@@ -72,7 +72,7 @@
 
 <script>
 	import { stampFormatter } from '../../common/utils.js'
-	import { GET_my_article, GET_article_delBtnClick } from "../../network/functions.js"
+	import { GET_posts_mounted, GET_article_delBtnClick } from "../../network/functions.js"
 
 	export default {
 		onLoad(options) {
@@ -159,7 +159,7 @@
 			},
 			queryNewArticle(reload = false) {
 				this.loadStatus = "loading"
-				GET_my_article(this.queryData).then(res => {
+				GET_posts_mounted(this.queryData).then(res => {
 					// console.log(res)
 					if (reload) {
 						this.articles = res.data.articles
@@ -176,7 +176,6 @@
 				})
 			},
 			loadMoreHandler() {
-				console.log("loadMore")
 				if (!this.noMoreContent) {
 					this.curPage += 1
 					this.queryNewArticle()
@@ -203,29 +202,22 @@
 		},
 		computed: {
 			queryData() {
-					let mode = "new"
-					let author_id = this.userInfo
-					let offset = this.curPage * this.pageSize
-					let limit = this.pageSize
-					return {
-						offset: offset,
-						limit: limit,
-						mode: "new",
-						author_id: author_id,
-					}	
+                let offset = this.curPage * this.pageSize
+                let limit = this.pageSize
+                if (this.total != -1 && offset >= this.total) {
+                    return {
+                        offset: this.total,
+                        limit: limit,
+                    }
+                } else {
+                    return {
+                        offset: offset,
+                        limit: limit,
+                    }
+                }	
 			},
 			noMoreContent() {
 				return this.articles.length == this.total
-			},
-			isLogged() {
-				return this.$store.getters.isLogged
-			},
-			userInfo() {
-				if (this.$store.getters.isLogged) {
-					return this.$store.getters.userInfo.uid
-				} else return {
-					uid: "",
-				}
 			},
 			showGoToTop() {
 				return this.oldScrollTop > 800
@@ -245,7 +237,7 @@
 }
 
 .article-card {
-    margin: 30rpx;
+    margin: 20rpx;
 }
 
 .article-title {

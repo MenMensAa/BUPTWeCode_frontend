@@ -184,7 +184,6 @@
                         console.log("board article Click", err)
                     }
                 })
-                this.$store.dispatch({                    type: 'addArticleHistory',                    history: this.articles[index],                    board: this.board                })
             },
             viewImage(img, index) {
                 uni.previewImage({

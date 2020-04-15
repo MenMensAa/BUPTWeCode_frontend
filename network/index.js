@@ -4,8 +4,9 @@ import { CODES } from '../common/cnst.js'
 
 export default function axios (options) {
     // const baseURL = "https://www.buptwecode.com"
-    // const baseURL = "https://test.buptwecode.com"
-    const baseURL = "http://192.168.0.107:5000"
+    const baseURL = "https://test.buptwecode.com"
+    // const baseURL = "http://192.168.0.103:5000"
+    // const baseURL = "http://localhost:5000"
     // const baseURL = "https://lzy.buptwecode.com"
     const url = baseURL + options.url
     let header = options.header

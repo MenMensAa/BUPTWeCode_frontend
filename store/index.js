@@ -43,15 +43,25 @@ const userModule = {
     mutations: {
         updateUser(state, payload) {
             state.userInfo = payload.userInfo
-            uni.setStorage({
-                key: 'userInfo',
-                data: payload.userInfo
-            })
+            uni.setStorageSync('userInfo', payload.userInfo)
         },
         clearUser(state) {
             state.userInfo = null
-            uni.removeStorage({
-                key: 'userInfo'
+            uni.removeStorageSync('userInfo')
+        }
+    },
+    actions: {
+        updateUser(context, payload) {
+            return new Promise((resolve, reject) => {
+                try {
+                    context.commit({
+                        type: "updateUser",
+                        userInfo: payload.userInfo
+                    })
+                    resolve()
+                } catch (err) {
+                    reject(err)
+                }
             })
         }
     },
@@ -345,14 +355,73 @@ const commentModule = {
     }
 }
 
-const articleHistoriesModule = {    state: {        histories: uni.getStorageSync('histories') || []    },    mutations: {        addArticleHistory(state, payload) {
-            let article_id = payload.history.article_id            let history = {                history: payload.history,                board: payload.board            }
+const articleHistoriesModule = {    state: {        histories: uni.getStorageSync('viewHistories') || []    },    mutations: {        addArticleHistory(state, payload) {
+            let article_id = payload.article.article_id
             for (let i = 0; i < state.histories.length; i++) {
-                if (state.histories[i].history.article_id == article_id) {
+                if (state.histories[i].article_id == article_id) {
                     state.histories.splice(i, 1)
                 }
-            }            state.histories.unshift(history)            uni.setStorageSync('histories', state.histories)        },        deleteArticleHistory(state, payload) {            state.histories.splice(payload.index, 1)            uni.setStorageSync('histories', state.histories)        },        clearArticleHistory(state) {            state.histories = []            uni.setStorageSync('histories', state.histories)        }    },    actions: {        addArticleHistory(context, payload) {            return new Promise((resolve, reject) => {                try {                    context.commit({                        type: 'addArticleHistory',                        history: payload.history,                        board: payload.board                    })                    resolve()                } catch (err) {                    reject(err)                }            })        },        deleteArticleHistory(context, payload) {            return new Promise((resolve, reject) => {                try {                    if (context.state.histories.length <= payload.index) {                        reject("缓存索引出错")                    } else {                        context.commit({                            type: 'deleteArticleHistory',                            index: payload.index                        })                        resolve()                    }                } catch (err) {                    reject(err)                }            })        },        clearArticleHistory(context) {            context.commit({                type: "clearArticleHistory"            })        }    },    getters: {        articleHistories: state => state.histories    }}
+            }            state.histories.unshift(payload.article)            uni.setStorageSync('viewHistories', state.histories)        },        deleteArticleHistory(state, payload) {            state.histories.splice(payload.index, 1)            uni.setStorageSync('viewHistories', state.histories)        },        clearArticleHistory(state) {            state.histories = []            uni.setStorageSync('viewHistories', state.histories)        }    },    actions: {        addArticleHistory(context, payload) {            return new Promise((resolve, reject) => {                try {                    context.commit({                        type: 'addArticleHistory',                        article: payload.article,                    })                    resolve()                } catch (err) {                    reject(err)                }            })        },        deleteArticleHistory(context, payload) {            return new Promise((resolve, reject) => {                try {                    if (context.state.histories.length <= payload.index) {                        reject("缓存索引出错")                    } else {                        context.commit({                            type: 'deleteArticleHistory',                            index: payload.index                        })                        resolve()                    }                } catch (err) {                    reject(err)                }            })        },        clearArticleHistory(context) {            context.commit({                type: "clearArticleHistory"            })        }    },    getters: {        articleHistories: state => state.histories    }}
 
+const searchModule = {
+    state: {
+        histories: uni.getStorageSync("searchHistories") || []
+    },
+    mutations: {
+        addSearchHistory(state, payload) {
+            let content = payload.content
+            for (let i = 0; i < state.histories.length; i++) {
+                if (state.histories[i] == content) {
+                    state.histories.splice(i, 1)
+                }
+            }
+            state.histories.unshift(content)
+            if (state.histories.length > 10) {
+                state.histories.pop()
+            }
+            uni.setStorageSync('searchHistories', state.histories)
+        },
+        deleteSearchHistory(state, payload) {
+            state.histories.splice(payload.index, 1)
+            uni.setStorageSync('searchHistories', state.histories)
+        },
+    },
+    actions: {
+        addSearchHistory(context, payload) {
+            return new Promise((resolve, reject) => {
+                try {
+                    context.commit({
+                        type: 'addSearchHistory',
+                        content: payload.content
+                    })
+                    resolve()
+                } catch (err) {
+                    reject(err)
+                }
+            })
+        },
+        deleteSearchHistory(context, payload) {
+            return new Promise((resolve, reject) => {
+                try {
+                    if (context.state.histories.length <= payload.index) {
+                        reject("缓存索引出错")
+                    } else {
+                        context.commit({
+                            type: 'deleteSearchHistory',
+                            index: payload.index
+                        })
+                        resolve()
+                    }
+                } catch (err) {
+                    reject(err)
+                }
+            })
+        }
+    },
+    getters: {
+        searchHistories: state => state.histories
+    }
+}
 
 const store = new Vuex.Store({
     state: {
@@ -375,7 +444,8 @@ const store = new Vuex.Store({
         board: boardModule,
         article: articleModule,
         comment: commentModule,
-        articleHistories: articleHistoriesModule
+        articleHistories: articleHistoriesModule,
+        search: searchModule
     }
 })
 

@@ -59,7 +59,7 @@
                 
                 <view class="cu-bar input margin-tb">
                 	
-                	<input v-model="tagForm.content" class="solid-bottom" 
+                	<input v-model="tagContent" class="solid-bottom" 
                            maxlength="10" cursor-spacing="10" placeholder="标签尽量和内容保持一致..."></input>
                 	<view class="action" @click="addTagHandler">
                 		<text class="cuIcon-roundaddfill text-grey"></text>
@@ -75,7 +75,7 @@
                     <view class="padding-xs" v-for="(item, index) in articleForm.tags" :key="index">
                         <view class="cu-capsule round">
                         	<view class="cu-tag" :class="['bg-'+tagColorHandler(index)]">
-                        		{{item.content}}
+                        		{{item}}
                         	</view>
                         	<view class="cu-tag" :class="['line-'+tagColorHandler(index)]" @click="delTagHandler(index)">
                         		<text class="cuIcon-close"></text>
@@ -137,9 +137,7 @@
                     tags:[]
                 },
                 tmpImageList: [],
-                tagForm: {
-                    content: ""
-                },
+                tagContent: "",
                 
                 draftIndex: -1,
                 btnLoading: false,
@@ -158,15 +156,19 @@
                 this.$refs.dialog.showDialog({
                     content: "是否删除该标签？"
                 }).then(() => {
-                    this.tags.splice(index, 1)
+                    this.articleForm.tags.splice(index, 1)
                 }).catch(() => {})
             },
             addTagHandler() {
-                if (!!this.tagForm.content && this.articleForm.tags.length < 4) {
-                    this.articleForm.tags.push({
-                        content: this.tagForm.content
-                    })
-                    this.tagForm.content = ""
+                if (!!this.tagContent && this.articleForm.tags.length < 4) {
+                    if (this.articleForm.tags.indexOf(this.tagContent) == -1) {
+                        this.articleForm.tags.push(this.tagContent)
+                        setTimeout(() => { this.tagContent = "" }, 50)
+                    } else {
+                        this.$refs.toast.showToast("tag内容重复了")
+                    }
+                } else if (this.articleForm.tags.length == 4) {
+                    this.$refs.toast.showToast("最多添加4个标签")
                 }
             },
             choiceBoardHandler() {
@@ -211,7 +213,7 @@
             	uni.chooseImage({
             		count: 4 - this.tmpImageList.length, //默认9
             		sizeType: ['original', 'compressed'], //可以指定是原图还是压缩图，默认二者都有
-            		sourceType: ['album'], //从相册选择
+            		// sourceType: ['album'], //从相册选择
             		success: (res) => {
             			if (this.tmpImageList.length != 0) {
             				this.tmpImageList = this.tmpImageList.concat(res.tempFilePaths)
@@ -227,6 +229,7 @@
                                 this.articleForm.images.push(this.$store.getters.imageDomain+res.key)
                             }).catch(err => {
                                 this.$refs.toast.showToast("图片上传失败")
+                                this.$refs.modal.showModal("标题", err.errMsg)
                                 if (this.$store.getters.debug) {
                                     console.log("editor uploadImage", err)
                                 }
@@ -310,7 +313,8 @@
 		},
         computed: {
             hasContent() {
-                if (!!this.articleForm.title || !!this.articleForm.content || this.articleForm.images.length > 0) {
+                if (!!this.articleForm.title || !!this.articleForm.content || 
+                    this.articleForm.images.length > 0 || this.articleForm.tags.length > 0) {
                     return true
                 } else {
                     return false

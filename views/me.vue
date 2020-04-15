@@ -1,7 +1,7 @@
 <template>
     <view>
         <template v-if="isLogged">
-            <view class="me-header flex margin-sm padding-sm shadow bg-white">
+            <view class="me-header flex margin-sm padding-sm shadow bg-white" @click="profileClick">
                 <view class="flex-sub">
                     <view class="cu-avatar xl round bg-red"
                           :style="[{ backgroundImage: 'url(' + userInfo.avatar + ')'}]">
@@ -13,7 +13,7 @@
                     <view class="me-signatrue margin-top-sm">{{userInfo.signature | signatureFilter}}</view>
                 </view>
             </view>
-
+            
             <view class="cu-list menu sm-border card-menu margin-top">
                 <template v-for="(val, index) in serviceList">
                     <view :key="val.id" class="cu-item arrow" @click="serviceClick(index)">
@@ -72,27 +72,35 @@
                                 type: 'setToken',
                                 token: res.data.token
                             })
-                            uni.getUserInfo({
-                                provider: "weixin",
-                                lang: "zh_CN",
-                                success: (info_res) => {
-                                    POST_me_login(info_res.userInfo).then(res => {
-                                        console.log(res.data)
-                                        that.$store.commit({
-                                            type: 'updateUser',
-                                            userInfo: res.data
+                            if (res.data.new) {
+                                uni.getUserInfo({
+                                    provider: "weixin",
+                                    lang: "zh_CN",
+                                    success: (info_res) => {
+                                        POST_me_login(info_res.userInfo).then(res => {
+                                            console.log(res.data)
+                                            that.$store.commit({
+                                                type: 'updateUser',
+                                                userInfo: res.data
+                                            })
+                                            that.$refs.modal.showModal("提示", "登陆成功!")
+                                        }).catch(err => {
+                                            that.$refs.modal.showModal("错误", "登陆过程中发生错误...")
+                                            if (that.$store.getters.debug) {
+                                                console.log(err)
+                                            }
+                                        }).finally(() => {
+                                            that.btnLoading = false
                                         })
-                                        that.$refs.modal.showModal("提示", "登陆成功!")
-                                    }).catch(err => {
-                                        that.$refs.modal.showModal("错误", "登陆过程中发生错误...")
-                                        if (that.$store.getters.debug) {
-                                            console.log(err)
-                                        }
-                                    }).finally(() => {
-                                        that.btnLoading = false
-                                    })
-                                }
-                            })
+                                    }
+                                })
+                            } else {
+                                that.$store.commit({
+                                    type: 'updateUser',
+                                    userInfo: res.data.info
+                                })
+                                that.$refs.modal.showModal("提示", "登陆成功!")
+                            }
                         }).catch(err => {
                             that.$store.commit({
                                 type: "unsetToken"
@@ -153,6 +161,11 @@
             serviceClick(index) {
                 uni.navigateTo({
                     url: this.serviceList[index].dest
+                })
+            },
+            profileClick() {
+                uni.navigateTo({
+                    url: "/pages/profile/profile"
                 })
             }
         },

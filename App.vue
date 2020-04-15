@@ -57,24 +57,9 @@
             		color: '#f37b1d'
             	},
             	{
-            		title: '明黄',
-            		name: 'yellow',
-            		color: '#fbbd08'
-            	},
-            	{
             		title: '橄榄',
             		name: 'olive',
             		color: '#8dc63f'
-            	},
-            	{
-            		title: '森绿',
-            		name: 'green',
-            		color: '#39b54a'
-            	},
-            	{
-            		title: '天青',
-            		name: 'cyan',
-            		color: '#1cbbb4'
             	},
             	{
             		title: '海蓝',

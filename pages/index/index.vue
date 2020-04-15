@@ -94,6 +94,8 @@
             }
             GET_notify_rotation().then(res => {
                 this.newCount = res.data.new
+            }).catch(err => {
+                console.log(err)
             })
         },
         onUnload() {

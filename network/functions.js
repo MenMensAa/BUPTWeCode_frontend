@@ -53,6 +53,27 @@ export function POST_report(data) {
 // common结束部分
 
 // 专有部分,一般只供单独组件调用
+export function GET_like_mounted(data) {
+    return get({
+        url: "/api/user/likes/",
+        data: data
+    })
+}
+
+export function GET_posts_mounted(data) {
+    return get({
+        url: "/api/user/posts/",
+        data: data
+    })
+}
+
+export function POST_profile_updateProfile(data) {
+    return post({
+        url: "/api/user/profile/",
+        data: data
+    })
+}
+
 export function GET_notify_rotation(data) {
     return get({
         url: "/api/user/rotation/",
@@ -96,7 +117,6 @@ export function GET_my_article(data) {
 }
 
 export function GET_article_delBtnClick(data) {
- console.log(data)
     return get({
         url: "/api/article/delete/",
         data: data,  
@@ -165,7 +185,7 @@ export function GET_article_mounted(data) {
 
 export function POST_feedback_submitBtnClick(data) {
     return post({
-        url: '/api/feedback/submit/',
+        url: '/api/user/feedback/',
         data: data
     }, true)
 }

@@ -95,8 +95,8 @@
         
         
         
-        <view class="my-textarea bg-white my-shadow" v-show="textAreaShow">
-            <view class="textarea-container align-center">
+        <view class="my-textarea" v-show="textAreaShow">
+            <view class="textarea-container align-center bg-white my-shadow">
                 <view class="textarea-input">
                     <form>
                         <view class="cu-form-group input-background">
