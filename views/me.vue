@@ -2,6 +2,7 @@
     <view>
         <template v-if="isLogged">
             <view class="me-header flex margin-sm padding-sm shadow bg-white" @click="profileClick">
+                <veiw class="cuIcon-write write-icon"></veiw>
                 <view class="flex-sub">
                     <view class="cu-avatar xl round bg-red"
                           :style="[{ backgroundImage: 'url(' + userInfo.avatar + ')'}]">
@@ -40,6 +41,7 @@
         </template>
         <my-modal ref="modal"></my-modal>
         <button class="cu-btn block bg-green margin-xl lg" type="" @click="clearUserInfo">测试: 清除登陆状态</button>
+        <button class="cu-btn block bg-green margin-xl lg" type="" @click="clearStorage">测试: 清除所有缓存</button>
     </view>
 </template>
 
@@ -110,6 +112,8 @@
                             if (that.$store.getters.debug) {
                                 console.log("GET_store_SignIn", err)
                             }
+                        }).finally(() => {
+                            this.btnLoading = false
                         })
                     },
                     fail: (err) => {
@@ -129,7 +133,6 @@
                 let that = this
                 uni.getSetting({
                     success: (setting_res) => {
-                        console.log(setting_res)
                         if (!setting_res.authSetting["scope.userInfo"]) {
                             uni.authorize({
                                 scope: 'scope.userInfo',
@@ -146,8 +149,11 @@
                         }
                     },
                     fail: (err) => {
-                        console.log(err)
-                    }
+                        if (that.$store.getters.debug) {
+                            console.log("uni.login", err)
+                        }
+                        this.btnLoading = false
+                    },
                 })
             },
             clearUserInfo() {
@@ -157,6 +163,10 @@
                 this.$store.commit({
                     type: "unsetToken"
                 })
+            },
+            clearStorage() {
+                this.clearUserInfo()
+                uni.clearStorageSync()
             },
             serviceClick(index) {
                 uni.navigateTo({
@@ -209,6 +219,11 @@
     .me-signatrue {
         color: #d5d5d5;
         font-style: italic;
+    }
+    .write-icon {
+        position: absolute;
+        right: 2%;
+        top: 10%
     }
 }
 </style>

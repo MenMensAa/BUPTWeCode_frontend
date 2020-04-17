@@ -1,7 +1,6 @@
 <template>
 	<view v-if="pageLoaded">
-        <my-nav bgColor="bg-gradual-blue" :isBack="true"
-                   :autoBack="false" @backClick="backClickHandler" ref="nav">
+        <my-nav bgColor="bg-gradual-blue" :isBack="true" ref="nav">
             <block slot="backText">返回</block>
         	<block slot="content">{{navTitleText}}</block>
         </my-nav>
@@ -159,33 +158,15 @@
                 rateBtnLoading: false,
                 
                 sub_comments: [],
-                sendSubCommentTime: 0,
                 
-                pageSize: 10,
-                curPage: 0,
-                total: -1,
+                // pageSize: 10,
                 pageLoading: false,
                 loadStatus: "over",
                 queryCDing: false
 			};
 		},
         methods: {
-            backClickHandler() {
-                this.$store.dispatch({
-                    type: "clearComment"
-                }).then(() => {
-                    this.$refs.nav.backPage({
-                        floor: this.commentFloor,
-                        times: this.sendSubCommentTime,
-                        rated: this.comment.rated
-                    })
-                }).catch(err => {
-                    console.log("err in comment backpage")
-                })
-                
-            },
             rateComment() {
-                console.log("rate")
                 if (!this.rateBtnLoading) {
                     let data = {
                         comment_id: this.comment.comment_id
@@ -234,7 +215,8 @@
                     }).then(res => {
                         this.$refs.toast.showToast("发布评论成功")
                         this.subCommentContent = ""
-                        this.sendSubCommentTime += 1
+                        this.comment.sub_comments += 1
+                        this.queryNewSubComment()
                     }).catch(err => {
                         if (err.code == 404) {
                             this.$refs.toast.showToast("评论不存在...")
@@ -256,7 +238,7 @@
                 });
             },
             commentOperate() {
-                if (this.comment.author.author_id == this.userInfo.uid) {
+                if (this.comment.author.author_id == this.userInfo.uid || this.isOperator) {
                     this.$refs.menu.showMenu([3]).then(() => {
                         this.$refs.dialog.showDialog({
                             content: "是否删除该评论?"
@@ -328,7 +310,7 @@
                 }).catch(() => {})
             },
             subCommentOperate(item, index) {
-                if (item.author.author_id == this.userInfo.uid) {
+                if (item.author.author_id == this.userInfo.uid || this.isOperator) {
                     this.$refs.menu.showMenu([3]).then(() => {
                         this.deleteSubComment(item, index)
                     }).catch(() => {})
@@ -355,8 +337,7 @@
                     }).then(res => {
                         this.$refs.toast.showToast("删除评论成功")
                         this.sub_comments.splice(index, 1)
-                        this.sendSubCommentTime -= 1
-                        this.total -= 1
+                        this.comment.sub_comments -= 1
                     }).catch(err => {
                         this.$refs.toast.showToast("删除评论失败...")
                         if (this.$store.getters.debug) {
@@ -389,7 +370,6 @@
                 this.pageLoading = true
                 this.loadStatus = "loading"
                 GET_comment_mounted(this.queryData).then(res => {
-                    this.total = res.data.total
                     if (res.data.sub_comments.length == 0) {
                         this.queryCDing = true
                         setTimeout(() => {
@@ -397,9 +377,7 @@
                         }, 5000)
                     } else {
                         this.sub_comments.push(...res.data.sub_comments)
-                        this.curPage += 1
                     }
-                    console.log(this.sub_comments)
                 }).catch(err => {
                     if (err.code == 404) {
                         this.$refs.nav.backPage({
@@ -452,6 +430,9 @@
             userInfo() {
                 return this.$store.getters.userInfo
             },
+            isOperator() {
+                return this.$store.getters.isOperator
+            },
             inputTextDisplay() {
                 if (this.pageLoaded) {
                     return "回复给 " + this.targetComment.author.username + "："
@@ -468,20 +449,10 @@
             },
             queryData() {
                 if (this.pageLoaded) {
-                    let offset = this.curPage * this.pageSize
-                    let limit = this.pageSize
-                    if (this.total != -1 && offset >= this.total) {
-                        return {
-                            offset: this.total,
-                            limit: limit,
-                            comment_id: this.comment.comment_id
-                        }
-                    } else {
-                        return {
-                            offset: offset,
-                            limit: limit,
-                            comment_id: this.comment.comment_id
-                        }
+                    return {
+                        offset: this.sub_comments.length,
+                        limit: 10,
+                        comment_id: this.comment.comment_id
                     }
                 } else {
                     return {}

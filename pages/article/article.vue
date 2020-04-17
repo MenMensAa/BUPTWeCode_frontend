@@ -1,7 +1,6 @@
 <template>
 	<view v-if="pageLoaded">
-		<my-nav bgColor="bg-gradual-blue" :isBack="true"
-		           :autoBack="false" @backClick="backClickHandler" ref="nav">
+		<my-nav bgColor="bg-gradual-blue" :isBack="true" ref="nav">
 		    <block slot="backText">返回</block>
 			<block slot="content">{{boardName}}</block>
 		</my-nav>
@@ -15,7 +14,9 @@
                      @scrolltolower="loadMoreHandler" style="width: 100%;" show-scrollbar>
                      
             <view class="my-article">
-                <!-- <button class="cu-btn bg-green shadow follow-btn">关注</button> -->
+                <button class="cu-btn follow-btn round line-red" v-if="article.quality == 1">
+                    <text class="cuIcon-selection"></text>精品贴
+                </button>
                 <view class="cu-card dynamic no-card">
                 	<view class="cu-item shadow">
                 		<view class="cu-list menu-avatar">
@@ -104,7 +105,8 @@
         </scroll-view>
         
         
-        <view class="input-bar my-shadow" :animation="animationData" v-show="!textAreaShow">
+        <view class="input-bar my-shadow" :animation="animationData" v-show="!textAreaShow"
+              :style="{ 'opacity': inputBarOpacity }">
             <view class="cu-bar input input-bar-header">
                 <view class="cu-avatar round"
                       :style="[{ 'backgroundImage': 'url(' + userInfo.avatar + ')'}]">
@@ -161,7 +163,7 @@
     import { imageUploader } from '../../common/image_uploader.js'
     import ArticleBar from '../../components/article_bar.vue'
     import { POST_article_commentBtnClick, GET_article_mounted, GET_article_rateComment, POST_report,
-            GET_article_likeArticle, GET_article_deleteComment, GET_article_delBtnClick } from '../../network/functions.js'
+            GET_article_likeArticle, GET_article_deleteComment, GET_article_delBtnClick, GET_article_quality } from '../../network/functions.js'
     
 	export default {
         components: {
@@ -177,6 +179,12 @@
                 this.animation = uni.createAnimation({
                     duration: 200,
                     timingFunction: 'ease'
+                })
+                this.$store.dispatch({
+                    type: 'addArticleHistory',
+                    article: this.article,
+                }).then(() => {}).catch(err => {
+                    console.log("err in article backpage", err)
                 })
             } else {
                 console.log("err no article in vuex")
@@ -201,37 +209,19 @@
             })
             
             Promise.all([p1, p2]).then(() => {
-                // let animation = uni.createAnimation({
-                //     duration: 200,
-                //     timingFunction: 'linear'
-                // })
-                // let height = this.inputBarHeight - this.inputBarHeaderHeight
-                // animation.translateY(height).step()
-                // this.animationData = animation.export()
                 this.slideToBottom()
+                setTimeout(() => {
+                    this.inputBarOpacity = 1
+                }, 250)
             })
             
         },
         onShow() {
             if (this.$store.getters.hasNewMsg) {
                 let message = this.$store.getters.msg
-                let index = Number(message.floor) - 1
-                let count = 0
                 if (!!message.delete) {
                     this.comments.splice(index, 1)
                     this.article.comments -= 1
-                    this.total -= 1
-                    this.$store.dispatch({
-                        type: 'clearMessage'
-                    })
-                } else if (!!message.times) {
-                    if (message.rated != this.comments[index].rated) {
-                        count = message.rated ? 1 : -1
-                    }
-                    this.comments[index].rates += count
-                    this.comments[index].rated = message.rated
-                    let new_total = this.comments[index].sub_comments + message.times
-                    this.$set(this.comments[index], "sub_comments", new_total)
                     this.$store.dispatch({
                         type: 'clearMessage'
                     })
@@ -258,9 +248,6 @@
                 likeBtnLoading: false,
                 rateBtnLoading: false,
                 
-                pageSize: 10,
-                curPage: 0,
-                total: -1,
                 pageLoading: false,
                 loadStatus: "loading",
                 
@@ -271,29 +258,13 @@
                 animationData: {},
                 inputBarHeight: 0,
                 inputBarHeaderHeight: 0,
-                isDrug: false
+                isDrug: false,
+                inputBarOpacity: 0
 			}
 		},
 		methods: {
             tagColorHandler(index) {
                 return this.ColorList[index].name
-            },
-			backClickHandler() {
-                this.$store.dispatch({
-                    type: 'addArticleHistory',
-                    article: this.article,
-                }).then(() => {
-                    this.$refs.nav.backPage()
-                }).catch(err => {
-                    console.log("err in article backpage", err)
-                })
-                // this.$store.dispatch({
-                //     type: "clearArticle"
-                // }).then(() => {
-                //     this.$refs.nav.backPage()
-                // }).catch(err => {
-                //     console.log("err in article backpage")
-                // }) 
             },
             slideToBottom() {
                 let height = this.inputBarHeight - this.inputBarHeaderHeight
@@ -332,6 +303,22 @@
                         this.article.likes -= count
                     }).finally(() => {
                         this.likeBtnLoading = false
+                    })
+                }
+            },
+            qualityArticle() {
+                if (this.isOperator) {
+                    GET_article_quality({
+                        article_id: this.article.article_id
+                    }).then(() => {
+                        this.article.quality = 1 - this.article.quality
+                        let toast = this.article.quality == 1 ? "加精成功":"取消加精成功"
+                        this.$refs.toast.showToast(toast)
+                    }).catch(err => {
+                        this.$refs.toast.showToast("加精失败...")
+                        if (this.$store.getters.debug) {
+                            console.log("quality Article")
+                        }
                     })
                 }
             },
@@ -389,7 +376,7 @@
                 })
             },
             commentOperate(item, index) {
-                if (item.author.author_id == this.userInfo.uid) {
+                if (item.author.author_id == this.userInfo.uid || this.isOperator) {
                     this.$refs.menu.showMenu([3]).then(() => {
                         this.$refs.dialog.showDialog({
                             content: "是否删除该评论?"
@@ -422,7 +409,6 @@
                     this.$refs.toast.showToast("删除评论成功")
                     this.comments.splice(index, 1)
                     this.article.comments -= 1
-                    this.total -= 1
                 }).catch(err => {
                     this.$refs.toast.showToast("删除评论失败...")
                     if (this.$store.getters.debug) {
@@ -477,7 +463,18 @@
                 })
             },
             articleOperate() {
-                if (this.isHoster) {
+                if (this.isOperator) {
+                    let isQuality = this.article.quality != 1 ? 4:5
+                    this.$refs.menu.showMenu([0, 3, isQuality]).then(res => {
+                        if (res == 0) {
+                            console.log("share")
+                        } else if (res == 1) {
+                            this.deleteArticle()
+                        } else {
+                            this.qualityArticle()
+                        }
+                    }).catch(() => {})
+                } else if (this.isHoster) {
                     this.$refs.menu.showMenu([0, 3]).then(res => {
                         if (res == 0) {
                             console.log("share")
@@ -568,7 +565,6 @@
                 }
             },
             commentBtnClick() {
-                console.log("click")
                 if (this.commentForm.content.length == 0 && this.commentForm.images.length == 0) {
                     this.$refs.toast.showToast("评论内容不能为空!")
                 } else if (this.commentForm.images.length != this.tmpImageList.length) {
@@ -587,6 +583,7 @@
                         }
                         this.tmpImageList = []
                         this.article.comments += 1
+                        this.queryNewComment()
                     }).catch(err => {
                         if (err.code == 404) {
                             this.$refs.toast.showToast("该文章已被删除...")
@@ -605,9 +602,6 @@
                 this.pageLoading = true
                 this.loadStatus = "loading"
                 GET_article_mounted(this.queryData).then(res => {
-                    console.log(res)
-                    console.log(this.article)
-                    this.total = res.data.total
                     if (res.data.comments.length == 0) {
                         this.queryCommentCDing = true
                         setTimeout(() => {
@@ -615,7 +609,6 @@
                         }, 5000)
                     } else {
                         this.comments.push(...res.data.comments)
-                        this.curPage += 1
                     }
                     this.loadStatus = "over"
                 }).catch(err => {
@@ -653,20 +646,10 @@
             },
             queryData() {
                 if (this.pageLoaded) {
-                    let offset = this.curPage * this.pageSize
-                    let limit = this.pageSize
-                    if (this.total != -1 && offset >= this.total) {
-                        return {
-                            offset: this.total,
-                            limit: limit,
-                            article_id: this.article.article_id
-                        }
-                    } else {
-                        return {
-                            offset: offset,
-                            limit: limit,
-                            article_id: this.article.article_id
-                        }
+                    return {
+                        offset: this.comments.length,
+                        limit: 10,
+                        article_id: this.article.article_id
                     }
                 } else {
                     return {}
@@ -681,6 +664,9 @@
                 } else {
                     return false
                 }
+            },
+            isOperator() {
+                return this.$store.getters.isOperator
             }
         },
         filters: {

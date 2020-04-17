@@ -53,6 +53,20 @@ export function POST_report(data) {
 // common结束部分
 
 // 专有部分,一般只供单独组件调用
+export function GET_article_quality(data) {
+    return get({
+        url: "/api/article/quality/",
+        data: data
+    })
+}
+
+export function GET_search_mounted(data) {
+    return get({
+        url: "/api/article/search/",
+        data: data
+    })
+}
+
 export function GET_like_mounted(data) {
     return get({
         url: "/api/user/likes/",

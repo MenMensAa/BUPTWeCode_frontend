@@ -67,6 +67,7 @@ const userModule = {
     },
     getters: {
         isLogged: state => !!state.userInfo,
+        isOperator: state => state.userInfo.permission > 1,
         userInfo: state => state.userInfo
     }
 }

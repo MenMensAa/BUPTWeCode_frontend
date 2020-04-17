@@ -6,11 +6,15 @@
         	<block slot="content">发布</block>
         </my-nav>
 
-        <button class="cu-btn round sm" @click="testBtnHandler">测试按钮</button>
         <my-dialog ref="dialog"></my-dialog>
 		<my-modal ref="modal"></my-modal>
         <my-toast ref="toast"></my-toast>
         <my-selector ref="selector"></my-selector>
+        
+        <view class="cu-load load-modal" v-if="btnLoading">
+        	<image src="/static/logo.png" mode="aspectFit"></image>
+        	<view class="gray-text">加载中...</view>
+        </view>
         
         <view class="cu-bar bg-white">
         	<view class="action">
@@ -279,7 +283,7 @@
                                 console.log("删除已发布草稿失败", err)
                             })
                         }
-                        this.$refs.nav.backPage({toast: "发布成功!"})
+                        this.$refs.nav.backPage({toast: "发布成功,请刷新后查看"})
                     }).catch(err => {
                         let type = this.draftIndex == -1 ? "addDraft" : "updateDraft"
                         this.$store.dispatch({
@@ -306,10 +310,6 @@
                     })
                 }
             },
-            testBtnHandler() {
-                console.log(this.articleForm)
-                this.$refs.toast.showToast("这是一个测试toast")
-            }
 		},
         computed: {
             hasContent() {

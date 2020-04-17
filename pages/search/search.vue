@@ -1,21 +1,20 @@
 <template>
 	<view>
 		<my-nav bgColor="bg-gradual-blue" :isBack="true" ref="nav">
-			<block slot="backText">返回</block>
-			<block slot="content">赞过的帖子</block>
+		    <block slot="backText">返回</block>
+			<block slot="content">查询结果</block>
 		</my-nav>
         
-		<my-dialog ref="dialog"></my-dialog>
 		<my-modal ref="modal"></my-modal>
 		<my-toast ref="toast"></my-toast>
         
         <view class="cu-bar bg-white solid-bottom">
         	<view class="action">
-        		<text class="cuIcon-title text-orange"></text> 最近赞过的帖子都会展示在这里哟
+        		<text class="cuIcon-title text-orange"></text> {{searchTitle}}
         	</view>
         </view>
 
-        <scroll-view scroll-y="true" :style="{ height: scrollViewHeight }">
+        <scroll-view scroll-y="true" :style="{ height: scrollViewHeight }" @scrolltolower="loadMoreHandler">
             <view v-for="(item, index) in articles" :key="index" @click="articleClick(item, index)">
                 <view class="cu-card case">
                     <view class="cu-item shadow">
@@ -31,11 +30,10 @@
                                     </view>
                                 </view>
                                 <view class="board-name">
-                                    <button class="cu-btn round" :class="[item.quality == 1 ? 'line-red':'line-blue']" @click="boardClick(item)">
+                                	<button class="cu-btn round" :class="[item.quality == 1 ? 'line-red':'line-blue']" @click="boardClick(item)">
                                         <text v-if="item.quality == 1" class="cuIcon-selection"></text>{{item.board.name}}
                                     </button>
                                 </view>
-                                <view class="draft-card-del" :class="[item.liked ? 'cuIcon-likefill text-red':'cuIcon-like']" @click.stop="likeArticle(item)"></view>
                             </view>
                             
                             <view class="flex flex-wrap" v-if="item.tags.length > 0">
@@ -76,18 +74,27 @@
                 </view>
 		</view>
         
-            <view class="cu-load text-gray" :class="[loadStatus]"></view>
+            <view class="cu-load text-gray" :class="[loadStatus]" @click="loadMoreHandler"></view>
         </scroll-view>
     </view>
 </template>
 
 <script>
 	import { stampFormatter } from '../../common/utils.js'
-    import { GET_like_mounted, GET_article_likeArticle } from "../../network/functions.js"
+    import { GET_search_mounted } from "../../network/functions.js"
 
 	export default {
-        onLoad() {
+        onLoad(options) {
+            this.keyword = options.keyword
             this.queryNewData()
+            this.$store.dispatch({
+                type: "addSearchHistory",
+                content: this.keyword
+            }).then(res => {}).catch(err => {
+                if (this.$store.getters.debug) {
+                    console.log("searchBtnClick", err)
+                }
+            })
         },
         onShow() {
             if (this.$store.getters.hasNewMsg) {
@@ -107,6 +114,11 @@
 		data() {
 			return {
                 articles: [],
+                keyword: "",
+                
+                pageSize: 10,
+                curPage: 0,
+                total: -1,
                 
                 pageLoading: false,
                 queryCDing: false,
@@ -124,37 +136,11 @@
 					url: '/pages/board/board?board_id=' + item.board.board_id
 				})
 			},
-			likeArticle(item) {
-                if (!this.likeBtnLoading) {
-                    let data = {
-                        article_id: item.article_id
-                    }
-                    let count = item.liked ? -1 : 1
-                    item.liked = !item.liked
-                    item.likes += count
-                    this.likeBtnLoading = true
-                    GET_article_likeArticle(data).then(() => {
-                        if (item.liked) {
-                            this.$refs.toast.showToast("谢谢你的赞~")
-                        } else {
-                            this.$refs.toast.showToast("取消赞成功")
-                        }
-                    }).catch(err => {
-                        if (err.code == 404) {
-                            this.$refs.toast.showToast("该文章已被删除...")
-                        } else {
-                            if (this.$store.getters.debug) {
-                                console.log("article favor", err)
-                            }
-                            this.$refs.toast.showToast("出错了...")
-                        }
-                        item.liked = !item.liked
-                        item.likes -= count
-                    }).finally(() => {
-                        this.likeBtnLoading = false
-                    })
+            loadMoreHandler() {
+                if (!this.queryCDing) {
+                    this.queryNewData()
                 }
-			},
+            },
 			articleClick(item, index) {
 				this.$store.dispatch("setArticle", {
 					article: item
@@ -172,9 +158,18 @@
             queryNewData() {
                 this.pageLoading = true
                 this.loadStatus = "loading"
-                GET_like_mounted().then(res => {
+                GET_search_mounted(this.queryData).then(res => {
+                    this.total = res.data.total
                     this.loadStatus = "over"
-                    this.articles = res.data.articles
+                    if (res.data.articles.length == 0) {
+                        this.queryCDing = true
+                        setTimeout(() => {
+                            this.queryCDing = false
+                        }, 5000)
+                    } else {
+                        this.articles.push(...res.data.articles)
+                        this.curPage += 1
+                    }
                 }).catch(err => {
                     if (this.$store.getters.debug) {
                         console.log("like", err)
@@ -195,6 +190,32 @@
             scrollViewHeight() {
                 return this.$store.getters.windowHeight + 'px'
             },
+            searchTitle() {
+                if (this.loadStatus == "loading") {
+                    return "正在搜索中..."
+                } else if (this.loadStatus == "over") {
+                    return "共搜索到" + this.total + "篇相关帖子"
+                } else {
+                    return "出错了..."
+                }
+            },
+            queryData() {
+                let offset = this.curPage * this.pageSize
+                let limit = this.pageSize
+                if (this.total != -1 && offset >= this.total) {
+                    return {
+                        offset: this.total,
+                        limit: limit,
+                        keyword: this.keyword
+                    }
+                } else {
+                    return {
+                        offset: offset,
+                        limit: limit,
+                        keyword: this.keyword
+                    }
+                }
+            }
         },
 		filters: {
 			timeFormatter(val) {
@@ -210,10 +231,6 @@
 }
 .cu-card>.cu-item {
     margin: 15rpx;
-}
-.draft-card-del {
-    margin: 30rpx;
-    z-index: 2;
 }
 .title {
     font-size: 35rpx;

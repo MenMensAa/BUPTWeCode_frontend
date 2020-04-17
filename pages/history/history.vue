@@ -33,7 +33,9 @@
 								</view>
 							</view>
 							<view class="board-name">
-								<button class="cu-btn round" :class="'line-blue'" @click="boardClick(item)">{{item.board.name}}</button>
+								<button class="cu-btn round" :class="[item.quality == 1 ? 'line-red':'line-blue']" @click="boardClick(item)">
+                                    <text v-if="item.quality == 1" class="cuIcon-selection"></text>{{item.board.name}}
+                                </button>
 							</view>
 							<view class="draft-card-del cuIcon-delete" @click.stop="delHistoryClick(index)"></view>
 						</view>

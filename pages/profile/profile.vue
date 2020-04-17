@@ -1,12 +1,15 @@
 <template>
 	<view>
-        <my-nav bgColor="bg-gradual-blue" :isBack="true" ref="nav">
+        <my-nav bgColor="bg-gradual-blue" :isBack="true" ref="nav"
+                :autoBack="false" @backClick="backClickHandler">
         	<block slot="backText">返回</block>
         	<block slot="content">资料</block>
         </my-nav>
 		
         <my-modal ref="modal"></my-modal>
         <my-toast ref="toast"></my-toast>
+        <my-dialog ref="dialog"></my-dialog>
+        
         <view class="cu-load load-modal" v-if="uploading">
         	<image src="/static/logo.png" mode="aspectFit"></image>
         	<view class="gray-text">加载中...</view>
@@ -17,7 +20,7 @@
         		<text class="cuIcon-title text-orange"></text> 个人资料
         	</view>
             <view class="action">
-                <button class='cu-btn bg-green shadow' @click="saveProfile" :disabled="disable">保存</button>
+                <button class='cu-btn bg-green shadow' @click="saveProfile" :disabled="noChanged">保存</button>
             </view>
         </view>
         
@@ -75,6 +78,17 @@
             sexChange() {
                 this.profileForm.gender = 1 - this.profileForm.gender
             },
+            backClickHandler() {
+                if (!this.noChanged) {
+                    this.$refs.dialog.showDialog({
+                        content: "还有没保存的修改，确定退出吗?"
+                    }).then(() => {
+                        this.$refs.nav.backPage()
+                    }).catch(() => {})
+                } else {
+                    this.$refs.nav.backPage()
+                }
+            },
             saveProfile() {
                 this.sending = true
                 POST_profile_updateProfile(this.profileForm).then(() => {
@@ -106,7 +120,6 @@
             		sizeType: ['original', 'compressed'], //可以指定是原图还是压缩图，默认二者都有
             		// sourceType: ['album'], //从相册选择
             		success: (res) => {
-            			console.log(res)
                         this.uploading = true
                         for (let imagePath of res.tempFilePaths) {
                             imageUploader(imagePath, callback => {
@@ -137,18 +150,13 @@
             isMale() {
                 return this.profileForm.gender == 1
             },
-            disable() {
+            noChanged() {
                 if (this.sending) {
                     return true
                 }
                 return JSON.stringify(this.profileForm) == JSON.stringify(this.oldProfileForm)
             }
         },
-        watch: {
-            profileForm() {
-                console.log("change")
-            }
-        }
 	}
 </script>
 

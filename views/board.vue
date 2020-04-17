@@ -61,7 +61,6 @@
         mounted() {
             if (!this.$store.getters.boardLoaded) {
                 GET_board_mounted().then(res => {
-                    console.log(res.data.boards)
                     this.$store.dispatch("setBoardList", {
                         boards: res.data.boards
                     })

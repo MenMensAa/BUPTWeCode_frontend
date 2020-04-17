@@ -1,10 +1,6 @@
 <template>
     <view class="cu-modal bottom-modal" :class="{ show: isShow }" @click="hideMenu">
     	<view class="cu-dialog">
-    		<!-- <view class="cu-bar bg-white">
-    			<view class="action text-green">确定</view>
-    			<view class="action text-blue" @click="hideMenu">取消</view>
-    		</view> -->
             <view class="container bg-white">
                 <view class="menu-box">
                         <view class="menu-box-item" v-for="(item, index) in showList" :key="index"
@@ -22,6 +18,7 @@
 </template>
 
 <script>
+    // 0: 分享   1: 收藏(不使用)   2: 举报   3: 删除  4: 加精  5: 取消加精
     export default {
         name: "Menu",
         data() {
@@ -47,6 +44,16 @@
                         text: "删除",
                         icon: "cuIcon-delete",
                         bg: "bg-red"
+                    },
+                    {
+                        text: "加精",
+                        icon: "cuIcon-selection",
+                        bg: "bg-yellow"
+                    },
+                    {
+                        text: "取消加精",
+                        icon: "cuIcon-selection",
+                        bg: "bg-yellow"
                     }
                 ],
                 currentAction: {},

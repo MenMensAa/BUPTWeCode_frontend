@@ -48,6 +48,9 @@
                                             {{item.created | timeFormatter}}
                                         </view>
                                     </view>
+                                    <button class="cu-btn follow-btn round line-red" v-if="item.quality == 1">
+                                        <text class="cuIcon-selection"></text>精品贴
+                                    </button>
                                 </view>
                                 
                                 <view class="flex flex-wrap" v-if="item.tags.length > 0">
@@ -83,7 +86,7 @@
                                 <text class="cuIcon-likefill margin-lr-xs" :class="{ 'text-red': item.liked }"></text> {{item.likes}}
                                 <text class="cuIcon-messagefill margin-lr-xs"></text> {{item.comments}}
                             </view>
-                            
+
                         </view>
                     </view>
                    
@@ -122,7 +125,6 @@
                     break
                 }
             }
-            console.log(this.board)
             this.queryNewArticle()
         },
         onShow() {
@@ -151,9 +153,6 @@
                 board: null,
                 articles: [],
                 
-                pageSize: 10,
-                curPage: 0,
-                total: -1,
                 tabbar: ["最新", "精品"],
                 activeTabbar: 0,
                 
@@ -166,7 +165,10 @@
 		},
 		methods: {
 			tabbarClick(index) {
-                this.activeTabbar = index
+                if (!this.pageLoading) {
+                    this.activeTabbar = index
+                    this.reloadPageHandler(false)
+                }
             },
             tagColorHandler(index) {
                 return this.ColorList[index].name
@@ -191,25 +193,28 @@
                 	current: img
                 });
             },
-            queryNewArticle(reload=false) {
+            queryNewArticle(reload=false, toast=true) {
                 this.pageLoading = true
                 this.loadStatus = "loading"
-                GET_board_article(this.queryData).then(res => {
-                    // console.log(res)
-                    this.total = res.data.total
+                let queryData = { ...this.queryData }
+                if (reload) {
+                    queryData.offset = 0
+                }
+                GET_board_article(queryData).then(res => {
+                    // console.log(res.data.total, res.data.articles.length)
+                    if (reload) {
+                        this.articles = res.data.articles
+                        if (toast) {
+                            this.$refs.toast.showToast("刷新成功...") 
+                        }
+                    } else {
+                        this.articles.push(...res.data.articles)
+                    }
                     if (res.data.articles.length == 0) {
                         this.queryCDing = true
                         setTimeout(() => {
                             this.queryCDing = false
                         }, 5000)
-                    } else {
-                        if (reload) {
-                            this.articles = res.data.articles
-                            this.$refs.toast.showToast("刷新成功...") 
-                        } else {
-                            this.articles.push(...res.data.articles)
-                        }
-                        this.curPage += 1
                     }
                     this.loadStatus = "over"
                 }).catch(err => {
@@ -219,6 +224,7 @@
                      this.loadStatus = "erro"
                 }).finally(() => {
                      this.pageLoading = false
+                     // console.log(this.articles)
                 })
             },
             loadMoreHandler() {
@@ -235,10 +241,9 @@
                     this.scrollTop = 0
                 })
             },
-            reloadPageHandler() {
+            reloadPageHandler(toast=true) {
                 this.goToTopHandler()
-                this.curPage = 0
-                this.queryNewArticle(true)
+                this.queryNewArticle(true, toast)
             },
             publishHandler() {
                 uni.navigateTo({
@@ -250,16 +255,13 @@
             queryData() {
                 if (this.pageLoaded) {
                     let mode = "new"
-                    if (this.activeTabbar == 1) {
-                        mode = "hot"
-                    }
-                    let offset = this.curPage * this.pageSize
-                    let limit = this.pageSize
+                    let quality = this.activeTabbar == 1 ? 1:0
                     return {
-                        offset: offset,
-                        limit: limit,
+                        offset: this.articles.length,
+                        limit: 10,
                         board_id: this.board.board_id,
-                        mode: mode
+                        mode: mode,
+                        quality: quality
                     }
                 } else {
                     return {}
@@ -270,7 +272,7 @@
             },
             scrollViewHeight() {
                 return this.$store.getters.windowHeight + 'px'
-            }
+            },
         },
         filters: {
             timeFormatter(val) {
@@ -320,6 +322,12 @@
     }
     .article-card {
         margin: 20rpx;
+    }
+    .follow-btn {
+        position: absolute;
+        top: 30rpx;
+        right: 30rpx;
+        z-index: 2;
     }
 }
 

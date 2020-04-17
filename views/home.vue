@@ -1,5 +1,7 @@
 <template>
     <view>
+        <my-toast ref="toast"></my-toast>
+        
         <view class="cu-bar search bg-white">
             <view class="search-form round">
                 <text class="cuIcon-search"></text>
@@ -13,12 +15,12 @@
         <view class="text-grey margin-top" style="text-align: center;" v-if="searchHistories.length == 0">搜索历史最多保存十条</view>
         
         <view class="flex flex-wrap margin-lr">
-            <view class="padding-xs" v-for="(item, index) in searchHistories" :key="index">
+            <view class="padding-xs" v-for="(item, index) in searchHistories" :key="index" @click="searchHistoryClick(item)">
                 <view class="cu-capsule round">
                 	<view class="cu-tag bg-grey">
                 		{{item}}
                 	</view>
-                	<view class="cu-tag line-grey" @click="delSearchHistory(index)">
+                	<view class="cu-tag line-grey" @click.stop="delSearchHistory(index)">
                 		<text class="cuIcon-close"></text>
                 	</view>
                 </view>
@@ -37,15 +39,13 @@
         },
         methods: {
             searchBtnClick() {
-                this.$store.dispatch({
-                    type: "addSearchHistory",
-                    content: this.searchContent
-                }).then(res => {
-                    console.log(this.searchContent)
-                    this.searchContent = ""
-                }).catch(err => {
-                    console.log("searchBtnClick", err)
-                })
+                if (!!this.searchContent) {
+                    uni.navigateTo({
+                        url: '/pages/search/search?keyword=' + this.searchContent
+                    })
+                } else {
+                    this.$refs.toast.showToast("搜索内容不能为空...")
+                }
             },
             delSearchHistory(index) {
                 this.$store.dispatch({
@@ -53,6 +53,11 @@
                     index: index
                 }).then(() => {}).catch(err => {
                     console.log("delSearchHistory", err)
+                })
+            },
+            searchHistoryClick(item) {
+                uni.navigateTo({
+                    url: '/pages/search/search?keyword=' + item
                 })
             }
         },

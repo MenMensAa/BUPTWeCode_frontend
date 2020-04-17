@@ -29,11 +29,14 @@
 									<view class="text-gray text-sm flex justify-between boardName">
 										 {{item.created | timeFormatter}}
 									</view>
-
-									<view class="delIcon">
-										<view class="cuIcon-delete" @click.stop="delArticleClick(index)"></view>
-									</view>
+                                    
 								</view>
+                                <view class="board-name" v-if="item.quality == 1">
+                                	<button class="cu-btn follow-btn round line-red">
+                                	    <text class="cuIcon-selection"></text>精品贴
+                                	</button>
+                                </view>
+                                <view class="draft-card-del cuIcon-delete" @click.stop="delArticleClick(index)"></view>
 							</view>
 						</view>
 
@@ -185,7 +188,6 @@
 				}
 			},
 			scrollHandler(e) {
-				// console.log(e)
 				this.oldScrollTop = e.detail.scrollTop
 			},
 			goToTopHandler() {
@@ -193,11 +195,6 @@
 				this.$nextTick(function() {
 					this.scrollTop = 0
 				})
-			},
-			reloadPageHandler() {
-				this.goToTopHandler()
-				this.curPage = 0
-				this.queryNewArticle(true)
 			},
 		},
 		computed: {
@@ -266,11 +263,13 @@
     bottom: 10%;
 }
 
-.delIcon {
-    position: absolute;
-    top: 30rpx;
-    right: 30rpx;
+.board-name {
+    margin: 8px;
 }
 
+.draft-card-del {
+    margin: 30rpx;
+    z-index: 2;
+}
 </style>
 
