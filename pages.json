@@ -48,6 +48,20 @@
             "path" : "pages/search/search",
             "style" : {}
         }
+        ,{
+            "path" : "pages/tag/tag",
+            "style" : {}
+        }
+        ,{
+            "path" : "pages/regist/regist",
+            "style" : {
+                "navigationBarTextStyle": "black"
+            }
+        }
+        ,{
+            "path" : "pages/about/about",
+            "style" : {}
+        }
     ],
 	"globalStyle": {
 		"navigationBarTitleText": "uni-app",

@@ -26,6 +26,21 @@ const loginModule = {
             state.fillerHeight = payload.fillerHeight
         }
     },
+    actions: {
+        setToken(context, payload) {
+            return new Promise((resolve, reject) => {
+                try {
+                    context.commit({
+                        type: 'setToken',
+                        token: payload.token
+                    })
+                    resolve()
+                } catch (err) {
+                    reject(err)
+                }
+            })
+        }
+    },
     getters: {
         hasToken: state => !!state.token,
         token: state => state.token,
@@ -424,6 +439,35 @@ const searchModule = {
     }
 }
 
+const tagModule = {
+    state: {
+        tag: ""
+    },
+    mutations: {
+        setTag(state, payload) {
+            state.tag = payload.tag
+        }
+    },
+    actions: {
+        setTag(context, payload) {
+            return new Promise((resolve, reject) => {
+                try {
+                    context.commit({
+                        type: 'setTag',
+                        tag: payload.tag
+                    })
+                    resolve()
+                } catch (err) {
+                    reject(err)
+                }
+            })
+        },
+    },
+    getters: {
+        tag: state => state.tag
+    }
+}
+
 const store = new Vuex.Store({
     state: {
         
@@ -446,7 +490,8 @@ const store = new Vuex.Store({
         article: articleModule,
         comment: commentModule,
         articleHistories: articleHistoriesModule,
-        search: searchModule
+        search: searchModule,
+        tag: tagModule
     }
 })
 

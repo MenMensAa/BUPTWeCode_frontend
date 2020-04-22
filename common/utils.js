@@ -1,36 +1,40 @@
 export function stampFormatter (timestamp, formats) {
-    // formats格式包括
-    // 1. Y-m-d
-    // 2. Y-m-d H:i:s
-    // 3. Y年m月d日
-    // 4. Y年m月d日 H时i分
-    formats = formats || 'Y-m-d';
-
-    var zero = function (value) {
-        if (value < 10) {
-            return '0' + value;
-        }
-        return value;
-    };
-
-    var myDate = timestamp? new Date(timestamp*1000): new Date();
-
-    var year = myDate.getFullYear();
-    var month = zero(myDate.getMonth() + 1);
-    var day = zero(myDate.getDate());
-
-    var hour = zero(myDate.getHours());
-    var minite = zero(myDate.getMinutes());
-    var second = zero(myDate.getSeconds());
-
-    return formats.replace(/Y|m|d|H|i|s/ig, function (matches) {
-        return ({
-            Y: year,
-            m: month,
-            d: day,
-            H: hour,
-            i: minite,
-            s: second
-        })[matches];
-    });
+      var dateTime = new Date(timestamp * 1000);
+      var year = dateTime.getFullYear();
+      var month = dateTime.getMonth() + 1;
+      var day = dateTime.getDate();
+      var hour = dateTime.getHours();
+      var minute = dateTime.getMinutes();
+      //当前时间
+      var now = Date.parse(new Date());
+      var milliseconds = 0;
+      var timeSpanStr;
+      //计算时间差
+      milliseconds = (now / 1000) - timestamp;
+     
+      //一分钟以内
+      if (milliseconds <= 60) {
+          timeSpanStr = '刚刚';
+      }
+      //大于一分钟小于一小时
+      else if (60 < milliseconds && milliseconds <= 60 * 60) {
+          timeSpanStr = Math.ceil((milliseconds / (60))) + '分钟前';
+      }
+      //大于一小时小于等于一天
+      else if (60 * 60 < milliseconds && milliseconds <= 60 * 60 * 24) {
+          timeSpanStr = Math.ceil(milliseconds / (60 * 60)) + '小时前';
+      }
+      //大于一天小于等于30天
+      else if (60 * 60 * 24 < milliseconds && milliseconds <= 60 * 60 * 24 * 30) {
+          timeSpanStr = Math.ceil(milliseconds / (60 * 60 * 24)) + '天前';
+      }
+      //大于一个月小于一年
+      else if (60 * 60 * 24 * 30 < milliseconds && milliseconds <= 60 * 60 * 24 * 30 * 12){
+          timeSpanStr = Math.ceil(milliseconds / (60 * 60 * 24 * 30)) + '个月前';
+      }
+      //超过一年显示
+      else {
+          timeSpanStr = year + '年' + month + '月' + day + '日'; 
+      }
+      return timeSpanStr;
 };

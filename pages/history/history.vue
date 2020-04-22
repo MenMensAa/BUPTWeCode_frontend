@@ -47,7 +47,9 @@
                             	</button>
                             </view>
                             <view class="padding-xs" v-for="(tag, idx) in item.tags" :key="idx">
-                                <view class="cu-tag light round" :class="['bg-'+tagColorHandler(idx)]">{{tag.content}}</view>
+                                <view class="cu-tag light round" :class="['bg-'+tagColorHandler(idx)]" @click.stop="tagClick(tag)">
+                                    {{tag.content}}
+                                </view>
                             </view>
                         </view>
                         
@@ -82,6 +84,7 @@
 
 <script>
 	import { stampFormatter } from '../../common/utils.js'
+    import { GET_notify_pointedArticle } from '../../network/functions.js'
 
 	export default {
         onShow() {
@@ -116,6 +119,20 @@
             tagColorHandler(index) {
                 return this.ColorList[index].name
             },
+            tagClick(tag) {
+                this.$store.dispatch({
+                    type: "setTag",
+                    tag: tag
+                }).then(() => {
+                    uni.navigateTo({
+                        url: "/pages/tag/tag"
+                    })
+                }).catch(err => {
+                    if (this.$store.getters.debug) {
+                        console.log("home tagClick", err)
+                    }
+                })
+            },
 			clearHistories() {
 				this.$refs.dialog.showDialog({
 					"title": "提示",
@@ -124,7 +141,6 @@
 					this.$store.dispatch({
 						type: 'clearArticleHistory',
 					}).then(() => {
-						// this.$refs.modal.showModal("提示", "删除成功")
 						this.$refs.toast.showToast("删除成功")
 					}).catch(err => {
 						console.log(err)
@@ -146,7 +162,6 @@
 						type: 'deleteArticleHistory',
 						index: index
 					}).then(() => {
-						// this.$refs.modal.showModal("提示", "删除成功")
 						this.$refs.toast.showToast("删除成功")
 					}).catch(err => {
 						console.log(err)
@@ -155,18 +170,30 @@
 				}).catch(() => {})
 			},
 			historyClick(item, index) {
-				this.$store.dispatch("setArticle", {
-					article: item
-				}).then(() => {
-					uni.navigateTo({
-						url: '/pages/article/article?board_name=' + item.board.name + '&index=' + index
-					})
-				}).catch(err => {
-					this.$refs.toast.showToast("啊哦...好像出错了")
-					if (this.$store.getters.debug) {
-						console.log("history article Click", err)
-					}
-				})
+                GET_notify_pointedArticle({
+                    article_id: item.article_id
+                }).then(res => {
+                    this.$store.dispatch("setArticle", {
+                        article: res.data.article
+                    }).then(() => {
+                        uni.navigateTo({
+                            url: '/pages/article/article?index=' + index
+                        })
+                    }).catch(err => {
+                        this.$refs.toast.showToast("啊哦...好像出错了")
+                        if (this.$store.getters.debug) {
+                            console.log("board article Click", err)
+                        }
+                    })
+                }).catch(err => {
+                    if (err.code == 404) {
+                        this.$refs.toast.showToast("该文章已被删除...")
+                    } else {
+                        if (this.$store.getters.debug) {
+                            console.log("notify navToArticle", err)
+                        }
+                    }
+                })
 			},
 			viewImage(img, index) {
 				uni.previewImage({
@@ -177,7 +204,6 @@
 		},
 		computed: {
 			histories() {
-				// console.log(this.$store.getters.articleHistories)
 				return this.$store.getters.articleHistories
 			},
 		},

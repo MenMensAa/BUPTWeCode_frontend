@@ -43,7 +43,9 @@
                                     </button>
                                 </view>
                                 <view class="padding-xs" v-for="(tag, idx) in item.tags" :key="idx">
-                                    <view class="cu-tag light round" :class="['bg-'+tagColorHandler(idx)]">{{tag.content}}</view>
+                                    <view class="cu-tag light round" :class="['bg-'+tagColorHandler(idx)]" @click.stop="tagClick(tag)">
+                                        {{tag.content}}
+                                    </view>
                                 </view>
                             </view>
                             
@@ -116,8 +118,6 @@
                 articles: [],
                 keyword: "",
                 
-                pageSize: 10,
-                curPage: 0,
                 total: -1,
                 
                 pageLoading: false,
@@ -130,6 +130,20 @@
 		methods: {
             tagColorHandler(index) {
                 return this.ColorList[index].name
+            },
+            tagClick(tag) {
+                this.$store.dispatch({
+                    type: "setTag",
+                    tag: tag
+                }).then(() => {
+                    uni.navigateTo({
+                        url: "/pages/tag/tag"
+                    })
+                }).catch(err => {
+                    if (this.$store.getters.debug) {
+                        console.log("home tagClick", err)
+                    }
+                })
             },
 			boardClick(item) {
 				uni.navigateTo({
@@ -146,7 +160,7 @@
 					article: item
 				}).then(() => {
 					uni.navigateTo({
-						url: '/pages/article/article?board_name=' + item.board.name + '&index=' + index
+						url: '/pages/article/article?index=' + index
 					})
 				}).catch(err => {
 					this.$refs.toast.showToast("啊哦...好像出错了")
@@ -156,32 +170,33 @@
 				})
 			},
             queryNewData() {
-                this.pageLoading = true
-                this.loadStatus = "loading"
-                GET_search_mounted(this.queryData).then(res => {
-                    this.total = res.data.total
-                    this.loadStatus = "over"
-                    if (res.data.articles.length == 0) {
-                        this.queryCDing = true
-                        setTimeout(() => {
-                            this.queryCDing = false
-                        }, 5000)
-                    } else {
-                        this.articles.push(...res.data.articles)
-                        this.curPage += 1
-                    }
-                }).catch(err => {
-                    if (this.$store.getters.debug) {
-                        console.log("like", err)
-                    }
-                    this.loadStatus = "erro"
-                }).finally(() => {
-                    this.pageLoading = false
-                })
+                if (!this.pageLoading) {
+                    this.pageLoading = true
+                    this.loadStatus = "loading"
+                    GET_search_mounted(this.queryData).then(res => {
+                        this.total = res.data.total
+                        this.loadStatus = "over"
+                        if (res.data.articles.length == 0) {
+                            this.queryCDing = true
+                            setTimeout(() => {
+                                this.queryCDing = false
+                            }, 5000)
+                        } else {
+                            this.articles.push(...res.data.articles)
+                        }
+                    }).catch(err => {
+                        if (this.$store.getters.debug) {
+                            console.log("like", err)
+                        }
+                        this.loadStatus = "erro"
+                    }).finally(() => {
+                        this.pageLoading = false
+                    })
+                }
             },
 			viewImage(img, index) {
 				uni.previewImage({
-					urls: this.histories[index].images,
+					urls: this.articles[index].images,
 					current: img
 				});
 			},
@@ -200,20 +215,10 @@
                 }
             },
             queryData() {
-                let offset = this.curPage * this.pageSize
-                let limit = this.pageSize
-                if (this.total != -1 && offset >= this.total) {
-                    return {
-                        offset: this.total,
-                        limit: limit,
-                        keyword: this.keyword
-                    }
-                } else {
-                    return {
-                        offset: offset,
-                        limit: limit,
-                        keyword: this.keyword
-                    }
+                return {
+                    offset: this.articles.length,
+                    limit: 10,
+                    keyword: this.keyword
                 }
             }
         },

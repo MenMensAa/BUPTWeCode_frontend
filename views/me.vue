@@ -1,5 +1,7 @@
 <template>
     <view>
+        <my-modal ref="modal"></my-modal>
+        
         <template v-if="isLogged">
             <view class="me-header flex margin-sm padding-sm shadow bg-white" @click="profileClick">
                 <veiw class="cuIcon-write write-icon"></veiw>
@@ -26,21 +28,8 @@
                 </template>
             </view>
         </template>
-        
-        <template v-else>
-            <button class="cu-btn block bg-green margin-xl lg" type="" 
-                    :disabled="btnLoading" open-type="getUserInfo" @getuserinfo="loginBtnClick">
-                <template v-if="btnLoading">
-                    <text class="cuIcon-loading2 cuIconfont-spin padding-sm"></text>
-                </template>
-                <template v-else>
-                    <text class="cuIcon-weixin padding-sm"></text>
-                </template>
-                微信登陆
-            </button>
-        </template>
-        <my-modal ref="modal"></my-modal>
-        <button class="cu-btn block bg-green margin-xl lg" type="" @click="clearUserInfo">测试: 清除登陆状态</button>
+
+        <button class="cu-btn block bg-green margin-xl lg" type="" @click="goToResigt">测试: 重新登陆</button>
         <button class="cu-btn block bg-green margin-xl lg" type="" @click="clearStorage">测试: 清除所有缓存</button>
     </view>
 </template>
@@ -58,115 +47,26 @@
                     { name: "帖子管理", icon: "cuIcon-form", dest: "/pages/posts/posts" },
                     { name: "赞过的帖子", icon: "cuIcon-like", dest: "/pages/like/like" },
                     { name: "草稿箱", icon: "cuIcon-edit", dest: "/pages/drafts/drafts" },
-                    { name: "反馈", icon: "cuIcon-service", dest: "/pages/feedback/feedback"}
+                    { name: "反馈", icon: "cuIcon-service", dest: "/pages/feedback/feedback" }, 
+                    { name: "关于", icon: "cuIcon-info", dest: "/pages/about/about" }
                 ],
             }
         },
         methods: {
-            login() {
-                let that = this
-                uni.login({
-                    provider: "weixin",
-                    success: (wx_res) => {
-                        GET_me_login(wx_res.code).then(res => {
-                            console.log('login', res)
-                            that.$store.commit({
-                                type: 'setToken',
-                                token: res.data.token
-                            })
-                            if (res.data.new) {
-                                uni.getUserInfo({
-                                    provider: "weixin",
-                                    lang: "zh_CN",
-                                    success: (info_res) => {
-                                        POST_me_login(info_res.userInfo).then(res => {
-                                            console.log(res.data)
-                                            that.$store.commit({
-                                                type: 'updateUser',
-                                                userInfo: res.data
-                                            })
-                                            that.$refs.modal.showModal("提示", "登陆成功!")
-                                        }).catch(err => {
-                                            that.$refs.modal.showModal("错误", "登陆过程中发生错误...")
-                                            if (that.$store.getters.debug) {
-                                                console.log(err)
-                                            }
-                                        }).finally(() => {
-                                            that.btnLoading = false
-                                        })
-                                    }
-                                })
-                            } else {
-                                that.$store.commit({
-                                    type: 'updateUser',
-                                    userInfo: res.data.info
-                                })
-                                that.$refs.modal.showModal("提示", "登陆成功!")
-                            }
-                        }).catch(err => {
-                            that.$store.commit({
-                                type: "unsetToken"
-                            })
-                            that.$refs.modal.showModal("错误", "登陆过程中发生错误...")
-                            that.btnLoading = false
-                            if (that.$store.getters.debug) {
-                                console.log("GET_store_SignIn", err)
-                            }
-                        }).finally(() => {
-                            this.btnLoading = false
-                        })
-                    },
-                    fail: (err) => {
-                        that.$store.commit({
-                            type: "unsetToken"
-                        })
-                        that.btnLoading = false
-                        that.$refs.modal.showModal("错误", "登陆过程中发生错误...")
-                        if (that.$store.getters.debug) {
-                            console.log("uni.login", err)
-                        }
-                    }
-                })
-            },
-            loginBtnClick() {
-                this.btnLoading = true
-                let that = this
-                uni.getSetting({
-                    success: (setting_res) => {
-                        if (!setting_res.authSetting["scope.userInfo"]) {
-                            uni.authorize({
-                                scope: 'scope.userInfo',
-                                success: () => {
-                                    that.login()
-                                },
-                                fail: () => {
-                                    that.btnLoading = false
-                                    console.log("auth deny")
-                                },
-                            })
-                        } else {
-                            that.login()
-                        }
-                    },
-                    fail: (err) => {
-                        if (that.$store.getters.debug) {
-                            console.log("uni.login", err)
-                        }
-                        this.btnLoading = false
-                    },
-                })
-            },
-            clearUserInfo() {
+            clearStorage() {
                 this.$store.commit({
                     type: "clearUser"
                 })
                 this.$store.commit({
                     type: "unsetToken"
                 })
-            },
-            clearStorage() {
-                this.clearUserInfo()
                 uni.clearStorageSync()
+                this.goToResigt()
+            },
+            goToResigt() {
+                uni.redirectTo({
+                    url: '/pages/regist/regist?from=me'
+                })
             },
             serviceClick(index) {
                 uni.navigateTo({

@@ -367,34 +367,36 @@
                 })
             },
             queryNewSubComment() {
-                this.pageLoading = true
-                this.loadStatus = "loading"
-                GET_comment_mounted(this.queryData).then(res => {
-                    if (res.data.sub_comments.length == 0) {
-                        this.queryCDing = true
-                        setTimeout(() => {
-                            this.queryCDing = false
-                        }, 5000)
-                    } else {
-                        this.sub_comments.push(...res.data.sub_comments)
-                    }
-                }).catch(err => {
-                    if (err.code == 404) {
-                        this.$refs.nav.backPage({
-                            delete: true,
-                            floor: this.commentFloor,
-                            toast: "该评论已被删除..."
-                        })
-                    }
-                    if (this.$store.getters.debug) {
-                        console.log("article mounted", err)
-                    }
-                    this.loadStatus = "erro"
-                    this.$refs.toast.showToast("评论加载出错...")
-                }).finally(() => {
-                    this.pageLoading = false
-                    this.loadStatus = "over"
-                })
+                if (!this.pageLoading) {
+                    this.pageLoading = true
+                    this.loadStatus = "loading"
+                    GET_comment_mounted(this.queryData).then(res => {
+                        if (res.data.sub_comments.length == 0) {
+                            this.queryCDing = true
+                            setTimeout(() => {
+                                this.queryCDing = false
+                            }, 5000)
+                        } else {
+                            this.sub_comments.push(...res.data.sub_comments)
+                        }
+                    }).catch(err => {
+                        if (err.code == 404) {
+                            this.$refs.nav.backPage({
+                                delete: true,
+                                floor: this.commentFloor,
+                                toast: "该评论已被删除..."
+                            })
+                        }
+                        if (this.$store.getters.debug) {
+                            console.log("article mounted", err)
+                        }
+                        this.loadStatus = "erro"
+                        this.$refs.toast.showToast("评论加载出错...")
+                    }).finally(() => {
+                        this.pageLoading = false
+                        this.loadStatus = "over"
+                    })
+                }
             },
             viewArticle() {
                 GET_notify_pointedArticle({

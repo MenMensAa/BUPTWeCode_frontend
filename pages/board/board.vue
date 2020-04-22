@@ -60,7 +60,9 @@
                                     	</button>
                                     </view>
                                     <view class="padding-xs" v-for="(tag, idx) in item.tags" :key="idx">
-                                        <view class="cu-tag light round" :class="['bg-'+tagColorHandler(idx)]">{{tag.content}}</view>
+                                        <view class="cu-tag light round" :class="['bg-'+tagColorHandler(idx)]" @click.stop="tagClick(tag)">
+                                            {{tag.content}}
+                                        </view>
                                     </view>
                                 </view>
                             </view>
@@ -173,6 +175,20 @@
             tagColorHandler(index) {
                 return this.ColorList[index].name
             },
+            tagClick(tag) {
+                this.$store.dispatch({
+                    type: "setTag",
+                    tag: tag
+                }).then(() => {
+                    uni.navigateTo({
+                        url: "/pages/tag/tag"
+                    })
+                }).catch(err => {
+                    if (this.$store.getters.debug) {
+                        console.log("home tagClick", err)
+                    }
+                })
+            },
             articleClick(item, index) {
                 this.$store.dispatch("setArticle", {
                     article: item
@@ -194,38 +210,39 @@
                 });
             },
             queryNewArticle(reload=false, toast=true) {
-                this.pageLoading = true
-                this.loadStatus = "loading"
-                let queryData = { ...this.queryData }
-                if (reload) {
-                    queryData.offset = 0
-                }
-                GET_board_article(queryData).then(res => {
-                    // console.log(res.data.total, res.data.articles.length)
+                if (!this.pageLoading) {
+                    this.pageLoading = true
+                    this.loadStatus = "loading"
+                    let queryData = { ...this.queryData }
                     if (reload) {
-                        this.articles = res.data.articles
-                        if (toast) {
-                            this.$refs.toast.showToast("刷新成功...") 
+                        queryData.offset = 0
+                    }
+                    GET_board_article(queryData).then(res => {
+                        if (reload) {
+                            this.articles = res.data.articles
+                            if (toast) {
+                                this.$refs.toast.showToast("刷新成功...") 
+                            }
+                        } else {
+                            this.articles.push(...res.data.articles)
                         }
-                    } else {
-                        this.articles.push(...res.data.articles)
-                    }
-                    if (res.data.articles.length == 0) {
-                        this.queryCDing = true
-                        setTimeout(() => {
-                            this.queryCDing = false
-                        }, 5000)
-                    }
-                    this.loadStatus = "over"
-                }).catch(err => {
-                     if (this.$store.getters.debug) {
-                         console.log("GET board article", err)
-                     }
-                     this.loadStatus = "erro"
-                }).finally(() => {
-                     this.pageLoading = false
-                     // console.log(this.articles)
-                })
+                        if (res.data.articles.length == 0) {
+                            this.queryCDing = true
+                            setTimeout(() => {
+                                this.queryCDing = false
+                            }, 5000)
+                        }
+                        this.loadStatus = "over"
+                    }).catch(err => {
+                         if (this.$store.getters.debug) {
+                             console.log("GET board article", err)
+                         }
+                         this.loadStatus = "erro"
+                    }).finally(() => {
+                         this.pageLoading = false
+                    })
+                }
+                
             },
             loadMoreHandler() {
                 if (!this.queryCDing) {

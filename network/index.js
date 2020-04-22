@@ -4,9 +4,8 @@ import { CODES } from '../common/cnst.js'
 
 export default function axios (options) {
     // const baseURL = "https://www.buptwecode.com"
-    // const baseURL = "https://test.buptwecode.com"
-    // const baseURL = "http://192.168.0.103:5000"
-    const baseURL = "http://localhost:5000"
+    const baseURL = "https://test.buptwecode.com"
+    // const baseURL = "http://localhost:5000"
     // const baseURL = "https://lzy.buptwecode.com"
     const url = baseURL + options.url
     let header = options.header
@@ -23,6 +22,10 @@ export default function axios (options) {
             success: (res) => {
                 if (res.data.code === CODES.OK) {
                     resolve(res.data)
+                } else if (res.data.code == CODES.TOKEN_ERROR) {
+                    uni.redirectTo({
+                        url: "/pages/regist/regist?expire=true&from=network"
+                    })
                 } else {
                     reject(res.data)
                 }

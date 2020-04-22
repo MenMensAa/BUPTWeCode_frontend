@@ -1,4 +1,5 @@
 import axios from './index.js'
+import store from '../store/index.js'
 
 let get = function(options) {
     return axios({
@@ -53,6 +54,13 @@ export function POST_report(data) {
 // common结束部分
 
 // 专有部分,一般只供单独组件调用
+export function GET_tag_mounted(data) {
+    return get({
+        url: "/api/article/tag/",
+        data: data
+    })
+}
+
 export function GET_article_quality(data) {
     return get({
         url: "/api/article/quality/",

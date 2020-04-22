@@ -4,25 +4,7 @@
     
 	export default {
 		onLaunch: function() {
-            // if (this.$store.getters.isLogged) {
-            //     GET_me_mounted().then(res => {
-            //         this.$store.commit({
-            //             type: 'updateUser',
-            //             userInfo: res.data
-            //         })
-            //     }).catch(err => {
-            //         this.$store.commit({
-            //             type: 'clearUser'
-            //         })
-            //         this.$store.commit({
-            //             type: 'unsetToken'
-            //         })
-            //         this.$refs.modal.showModal("错误", "读取用户信息错误，请重新登陆")
-            //         if (this.$store.getters.debug) {
-            //             console.log("me mounted", err)
-            //         }
-            //     })
-            // }
+            
             uni.getSystemInfo({
             	success: function(e) {
             		// #ifndef MP
@@ -107,7 +89,13 @@
             		color: '#ffffff'
             	},
             ]
-		},
+		
+            if (!this.$store.getters.hasToken) {
+                uni.redirectTo({
+                    url: "/pages/regist/regist?from=app"
+                })
+            }
+        },
 		onShow: function() {
 			// console.log('App Show')
 		},

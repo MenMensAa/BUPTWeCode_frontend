@@ -15,7 +15,8 @@
         	</view>
         </view>
 
-        <scroll-view scroll-y="true" :style="{ height: scrollViewHeight }">
+        <scroll-view scroll-y="true" :style="{ height: scrollViewHeight }"
+                     @scrolltolower="loadMoreHandler" style="width: 100%;" show-scrollbar>
             <view v-for="(item, index) in articles" :key="index" @click="articleClick(item, index)">
                 <view class="cu-card case">
                     <view class="cu-item shadow">
@@ -45,7 +46,9 @@
                                     </button>
                                 </view>
                                 <view class="padding-xs" v-for="(tag, idx) in item.tags" :key="idx">
-                                    <view class="cu-tag light round" :class="['bg-'+tagColorHandler(idx)]">{{tag.content}}</view>
+                                    <view class="cu-tag light round" :class="['bg-'+tagColorHandler(idx)]" @click.stop="tagClick(tag)">
+                                        {{tag.content}}
+                                    </view>
                                 </view>
                             </view>
                             
@@ -76,7 +79,7 @@
                 </view>
 		</view>
         
-            <view class="cu-load text-gray" :class="[loadStatus]"></view>
+            <view class="cu-load text-gray" :class="[loadStatus]" @click="loadMoreHandler"></view>
         </scroll-view>
     </view>
 </template>
@@ -103,6 +106,13 @@
                     type: 'clearMessage'
                 })
             }
+            let deleteCount = 0
+            for (let item of this.articles) {
+                if (!item.liked) {
+                    deleteCount += 1
+                }
+            }
+            this.deleteCount = deleteCount
         },
 		data() {
 			return {
@@ -112,18 +122,38 @@
                 queryCDing: false,
                 loadStatus: "over",
                 
-                likeBtnLoading: false
+                likeBtnLoading: false,
+                deleteCount: 0
 			}
 		},
 		methods: {
             tagColorHandler(index) {
                 return this.ColorList[index].name
             },
+            tagClick(tag) {
+                this.$store.dispatch({
+                    type: "setTag",
+                    tag: tag
+                }).then(() => {
+                    uni.navigateTo({
+                        url: "/pages/tag/tag"
+                    })
+                }).catch(err => {
+                    if (this.$store.getters.debug) {
+                        console.log("home tagClick", err)
+                    }
+                })
+            },
 			boardClick(item) {
 				uni.navigateTo({
 					url: '/pages/board/board?board_id=' + item.board.board_id
 				})
 			},
+            loadMoreHandler() {
+                if (!this.queryCDing) {
+                    this.queryNewData()
+                }
+            },
 			likeArticle(item) {
                 if (!this.likeBtnLoading) {
                     let data = {
@@ -136,8 +166,10 @@
                     GET_article_likeArticle(data).then(() => {
                         if (item.liked) {
                             this.$refs.toast.showToast("谢谢你的赞~")
+                            this.deleteCount -= 1
                         } else {
                             this.$refs.toast.showToast("取消赞成功")
+                            this.deleteCount += 1
                         }
                     }).catch(err => {
                         if (err.code == 404) {
@@ -160,7 +192,7 @@
 					article: item
 				}).then(() => {
 					uni.navigateTo({
-						url: '/pages/article/article?board_name=' + item.board.name + '&index=' + index
+						url: '/pages/article/article?index=' + index
 					})
 				}).catch(err => {
 					this.$refs.toast.showToast("啊哦...好像出错了")
@@ -170,23 +202,32 @@
 				})
 			},
             queryNewData() {
-                this.pageLoading = true
-                this.loadStatus = "loading"
-                GET_like_mounted().then(res => {
-                    this.loadStatus = "over"
-                    this.articles = res.data.articles
-                }).catch(err => {
-                    if (this.$store.getters.debug) {
-                        console.log("like", err)
-                    }
-                    this.loadStatus = "erro"
-                }).finally(() => {
-                    this.pageLoading = false
-                })
+                if (!this.pageLoading) {
+                    this.pageLoading = true
+                    this.loadStatus = "loading"
+                    GET_like_mounted(this.queryData).then(res => {
+                        if (res.data.articles.length == 0) {
+                            this.queryCDing = true
+                            setTimeout(() => {
+                                this.queryCDing = false
+                            }, 5000)
+                        } else {
+                            this.articles.push(...res.data.articles)
+                        }
+                        this.loadStatus = "over"
+                    }).catch(err => {
+                        if (this.$store.getters.debug) {
+                            console.log("like", err)
+                        }
+                        this.loadStatus = "erro"
+                    }).finally(() => {
+                        this.pageLoading = false
+                    })
+                }
             },
 			viewImage(img, index) {
 				uni.previewImage({
-					urls: this.histories[index].images,
+					urls: this.articles[index].images,
 					current: img
 				});
 			},
@@ -195,6 +236,12 @@
             scrollViewHeight() {
                 return this.$store.getters.windowHeight + 'px'
             },
+            queryData() {
+                return {
+                    offset: this.articles.length - this.deleteCount,
+                    limit: 10
+                }
+            }
         },
 		filters: {
 			timeFormatter(val) {

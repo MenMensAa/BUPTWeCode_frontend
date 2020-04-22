@@ -7,7 +7,7 @@
         <my-toast ref="toast"></my-toast>
         <my-modal ref="modal"></my-modal>
         
-        <template v-if="activeIndex === 0">
+        <!-- <template v-if="activeIndex === 0">
             <home-view></home-view>
         </template>
         <template v-else-if="activeIndex === 1">
@@ -18,11 +18,14 @@
         </template>
         <template v-else>
             <me-view></me-view>
-        </template>
-        <!-- <home-view :class="{ hidden: activeIndex != 0 }"></home-view>
+        </template> -->
+        <home-view :class="{ hidden: activeIndex != 0 }"></home-view>
         <board-view :class="{ hidden: activeIndex != 1 }"></board-view>
         <notify-view :class="{ hidden: activeIndex != 2 }" @change="countChangeHandler"></notify-view>
-        <me-view :class="{ hidden: activeIndex != 3 }"></me-view> -->
+        <!-- <template v-if="activeIndex === 2">
+            <notify-view @change="countChangeHandler"></notify-view>
+        </template> -->
+        <me-view :class="{ hidden: activeIndex != 3 }"></me-view>
         
         <view class="main-tabbar">
             <view class="cu-bar tabbar bg-white">
@@ -65,6 +68,11 @@
     import { GET_notify_rotation } from '../../network/functions.js'
     
 	export default {
+        onLoad(options) {
+            if (!!options.login) {
+                this.$refs.modal.showModal("提示", "登陆成功!")
+            }
+        },
 		data() {
 			return {
 				activeIndex: 0,
@@ -79,9 +87,6 @@
             'notify-view': Notify,
             'board-view': Board
         },
-		onLoad(options) {
-            // console.log("load")
-		},
         onShow() {
             if (this.$store.getters.hasNewMsg) {
                 let message = this.$store.getters.msg
@@ -97,15 +102,6 @@
             }).catch(err => {
                 console.log(err)
             })
-        },
-        onUnload() {
-            console.log("unload")
-        },
-        onHide() {
-            console.log("onhide")
-            // if (this.timer != null) {
-            //     clearInterval(this.timer)
-            // }
         },
         onReady() {
             let tabbar = uni.createSelectorQuery().select(".main-tabbar")
@@ -130,9 +126,6 @@
                 this.newCount = newCount
             }
 		},
-        computed: {
-
-        }
 	}
 </script>
 

@@ -49,7 +49,9 @@
                             	</button>
                             </view>
                             <view class="padding-xs" v-for="(tag, idx) in article.tags" :key="idx">
-                                <view class="cu-tag light round" :class="['bg-'+tagColorHandler(idx)]">{{tag.content}}</view>
+                                <view class="cu-tag light round" :class="['bg-'+tagColorHandler(idx)]" @click.stop="tagClick(tag)">
+                                    {{tag.content}}
+                                </view>
                             </view>
                         </view>
                         
@@ -266,6 +268,20 @@
             tagColorHandler(index) {
                 return this.ColorList[index].name
             },
+            tagClick(tag) {
+                this.$store.dispatch({
+                    type: "setTag",
+                    tag: tag
+                }).then(() => {
+                    uni.navigateTo({
+                        url: "/pages/tag/tag"
+                    })
+                }).catch(err => {
+                    if (this.$store.getters.debug) {
+                        console.log("home tagClick", err)
+                    }
+                })
+            },
             slideToBottom() {
                 let height = this.inputBarHeight - this.inputBarHeaderHeight
                 this.animation.translateY(height).step()
@@ -467,7 +483,7 @@
                     let isQuality = this.article.quality != 1 ? 4:5
                     this.$refs.menu.showMenu([0, 3, isQuality]).then(res => {
                         if (res == 0) {
-                            console.log("share")
+                            this.$refs.toast.showToast("该功能开发中...")
                         } else if (res == 1) {
                             this.deleteArticle()
                         } else {
@@ -477,7 +493,7 @@
                 } else if (this.isHoster) {
                     this.$refs.menu.showMenu([0, 3]).then(res => {
                         if (res == 0) {
-                            console.log("share")
+                            this.$refs.toast.showToast("该功能开发中...")
                         } else {
                             this.deleteArticle()
                         }
@@ -485,7 +501,7 @@
                 } else {
                     this.$refs.menu.showMenu([0, 2]).then(res => {
                         if (res == 0) {
-                            console.log("share")
+                            this.$refs.toast.showToast("该功能开发中...")
                         } else {
                             this.reportHandler(2, this.article.article_id)
                         }
@@ -599,35 +615,37 @@
                 }
             },
             queryNewComment() {
-                this.pageLoading = true
-                this.loadStatus = "loading"
-                GET_article_mounted(this.queryData).then(res => {
-                    if (res.data.comments.length == 0) {
-                        this.queryCommentCDing = true
-                        setTimeout(() => {
-                            this.queryCommentCDing = false
-                        }, 5000)
-                    } else {
-                        this.comments.push(...res.data.comments)
-                    }
-                    this.loadStatus = "over"
-                }).catch(err => {
-                    if (err.code == 404) {
-                        this.$refs.nav.backPage({
-                            delete: true,
-                            index: this.articleIndex,
-                            toast: "该文章已被删除..."
-                        })
-                    } else {
-                        if (this.$store.getters.debug) {
-                            console.log("article mounted", err)
+                if (!this.pageLoading) {
+                    this.pageLoading = true
+                    this.loadStatus = "loading"
+                    GET_article_mounted(this.queryData).then(res => {
+                        if (res.data.comments.length == 0) {
+                            this.queryCommentCDing = true
+                            setTimeout(() => {
+                                this.queryCommentCDing = false
+                            }, 5000)
+                        } else {
+                            this.comments.push(...res.data.comments)
                         }
-                        this.loadStatus = "erro"
-                        this.$refs.toast.showToast("评论加载出错...")
-                    }
-                }).finally(() => {
-                    this.pageLoading = false
-                })
+                        this.loadStatus = "over"
+                    }).catch(err => {
+                        if (err.code == 404) {
+                            this.$refs.nav.backPage({
+                                delete: true,
+                                index: this.articleIndex,
+                                toast: "该文章已被删除..."
+                            })
+                        } else {
+                            if (this.$store.getters.debug) {
+                                console.log("article mounted", err)
+                            }
+                            this.loadStatus = "erro"
+                            this.$refs.toast.showToast("评论加载出错...")
+                        }
+                    }).finally(() => {
+                        this.pageLoading = false
+                    })
+                }
             }
 		},
         computed: {

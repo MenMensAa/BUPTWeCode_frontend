@@ -55,9 +55,6 @@
                 notifications: [],
                 newCount: 0,
                 
-                pageSize: 10,
-                curPage: 0,
-                total: -1,
                 
                 scrollTop: 0,
                 oldScrollTop: 0,
@@ -69,36 +66,36 @@
         },
         methods: {
             queryNewData(reload=false) {
-                this.pageLoading = true
-                this.loadStatus = "loading"
-                GET_notify_mounted(this.queryData).then(res => {
-                    console.log(res.data)
-                    this.total = res.data.total
-                    this.newCount = res.data.new
-                    this.$emit("change", this.newCount)
-                    this.loadStatus = "over"
-                    if (res.data.notifications.length == 0) {
-                        this.queryCDing = true
-                        setTimeout(() => {
-                            this.queryCDing = false
-                        }, 5000)
-                    } else {
-                        if (reload) {
-                            this.notifications = res.data.notifications
-                            this.$refs.toast.showToast("刷新成功")
+                if (!this.pageLoading) {
+                    this.pageLoading = true
+                    this.loadStatus = "loading"
+                    GET_notify_mounted(this.queryData).then(res => {
+                        this.newCount = res.data.new
+                        this.$emit("change", this.newCount)
+                        this.loadStatus = "over"
+                        if (res.data.notifications.length == 0) {
+                            this.queryCDing = true
+                            setTimeout(() => {
+                                this.queryCDing = false
+                            }, 5000)
                         } else {
-                            this.notifications.push(...res.data.notifications)
+                            if (reload) {
+                                this.notifications = res.data.notifications
+                                this.$refs.toast.showToast("刷新成功")
+                            } else {
+                                this.notifications.push(...res.data.notifications)
+                            }
+                            this.curPage += 1
                         }
-                        this.curPage += 1
-                    }
-                }).catch(err => {
-                    if (this.$store.getters.debug) {
-                        console.log("notify", err)
-                    }
-                    this.loadStatus = "erro"
-                }).finally(() => {
-                    this.pageLoading = false
-                })
+                    }).catch(err => {
+                        if (this.$store.getters.debug) {
+                            console.log("notify", err)
+                        }
+                        this.loadStatus = "erro"
+                    }).finally(() => {
+                        this.pageLoading = false
+                    })
+                }
             },
             notifyClick(item) {
                 if (!item.visited) {
@@ -204,11 +201,9 @@
                 return height + 'px'
             },
             queryData() {
-                let offset = this.curPage * this.pageSize
-                let limit = this.pageSize
                 return {
-                    offset: offset,
-                    limit: limit,
+                    offset: this.notifications.length,
+                    limit: 10
                 }
             },
             userInfo() {

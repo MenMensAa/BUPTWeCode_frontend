@@ -8,7 +8,7 @@
 		<my-modal ref="modal"></my-modal>
 		<my-toast ref="toast"></my-toast>
 
-		<view v-if="isTipShow">
+		<view v-if="this.articels.length == 0">
 			<view class="tips text-gray margin-tb-sm text-center">
 				吾有帖哉？无帖也。
 			</view>
@@ -39,6 +39,19 @@
                                 <view class="draft-card-del cuIcon-delete" @click.stop="delArticleClick(index)"></view>
 							</view>
 						</view>
+                        
+                        <view class="flex flex-wrap" v-if="item.tags.length > 0">
+                            <view class="action">
+                                <button class="cu-btn cuIcon bg-white">
+                                    <text class="cuIcon-tag text-grey"></text>
+                                </button>
+                            </view>
+                            <view class="padding-xs" v-for="(tag, idx) in item.tags" :key="idx">
+                                <view class="cu-tag light round" :class="['bg-'+tagColorHandler(idx)]" @click.stop="tagClick(tag)">
+                                    {{tag.content}}
+                                </view>
+                            </view>
+                        </view>
 
 						<view class="padding-tb-sm padding-lr">
 							<view class="article-title">
@@ -63,7 +76,7 @@
 					</view>
 				</view>
 			</view>
-			<view class="cu-load text-gray" :class="[loadStatus]"></view>
+			<view class="cu-load text-gray" :class="[loadStatus]" @click="loadMoreHandler"></view>
 		</scroll-view>
 
 		<button class="cu-btn cuIcon goToTop lg fly-bottom bg-white animation-fade" @click.stop="goToTopHandler" v-show="showGoToTop">
@@ -78,7 +91,8 @@
 	import { GET_posts_mounted, GET_article_delBtnClick } from "../../network/functions.js"
 
 	export default {
-		onLoad(options) {
+		onLoad() {
+            console.log("loading")
 			this.queryNewArticle()
 		},
 		onReady() {
@@ -102,24 +116,35 @@
         },
 		data() {
 			return {
-				isTipShow: 0,
 				articles: [],
-
-
-				pageSize: 10,
-				curPage: 0,
-				total: -1,
 
 				scrollViewHeight: 0,
 				scrollTop: 0,
 				oldScrollTop: 0,
 				loadStatus: "over",
+                
+                queryCDing: false,
+                pageLoading: false
 			}
 		},
 		methods: {
-			chooseArticle() {
-				if (!!this.articels) this.isTipShow++
-			},
+            tagColorHandler(index) {
+                return this.ColorList[index].name
+            },
+            tagClick(tag) {
+                this.$store.dispatch({
+                    type: "setTag",
+                    tag: tag
+                }).then(() => {
+                    uni.navigateTo({
+                        url: "/pages/tag/tag"
+                    })
+                }).catch(err => {
+                    if (this.$store.getters.debug) {
+                        console.log("home tagClick", err)
+                    }
+                })
+            },
 			delArticleClick(index) {
 				this.$refs.dialog.showDialog({
 					"title": "提示",
@@ -128,8 +153,7 @@
                     let data = {
                     	article_id: this.articles[index].article_id
                     }
-					GET_article_delBtnClick(data).then(res => {
-						// console.log(res)
+					GET_article_delBtnClick(data).then(() => {
 						this.$refs.toast.showToast("删除成功")
 						this.articles.splice(index, 1)
 					}).catch(err => {
@@ -160,31 +184,33 @@
 					current: img
 				});
 			},
-			queryNewArticle(reload = false) {
-				this.loadStatus = "loading"
-				GET_posts_mounted(this.queryData).then(res => {
-					// console.log(res)
-					if (reload) {
-						this.articles = res.data.articles
-					} else {
-						this.articles.push(...res.data.articles)
-					}
-					this.total = res.data.total
-					this.loadStatus = "over"
-				}).catch(err => {
-					if (this.$store.getters.debug) {
-						console.log("GET my article", err)
-					}
-					this.loadStatus = "erro"
-				})
+			queryNewArticle() {
+                if (!this.pageLoading) {
+                    this.loadStatus = "loading"
+                    this.pageLoading = true
+                    GET_posts_mounted(this.queryData).then(res => {
+                        if (res.data.articles.length == 0) {
+                            this.queryCDing = true
+                            setTimeout(() => {
+                                this.queryCDing = false
+                            }, 5000)
+                        } else {
+                            this.articles.push(...res.data.articles)
+                        }
+                    	this.loadStatus = "over"
+                    }).catch(err => {
+                    	if (this.$store.getters.debug) {
+                    		console.log("GET my article", err)
+                    	}
+                    	this.loadStatus = "erro"
+                    }).finally(() => {
+                        this.pageLoading = false
+                    })
+                }
 			},
 			loadMoreHandler() {
-				if (!this.noMoreContent) {
-					this.curPage += 1
+				if (!this.queryCDing) {
 					this.queryNewArticle()
-				} else {					
-					this.$refs.toast.showToast("已到天涯海角处~")
-					this.loadStatus = "over"
 				}
 			},
 			scrollHandler(e) {
@@ -199,22 +225,10 @@
 		},
 		computed: {
 			queryData() {
-                let offset = this.curPage * this.pageSize
-                let limit = this.pageSize
-                if (this.total != -1 && offset >= this.total) {
-                    return {
-                        offset: this.total,
-                        limit: limit,
-                    }
-                } else {
-                    return {
-                        offset: offset,
-                        limit: limit,
-                    }
+                return {
+                    offset: this.articles.length,
+                    limit: 10
                 }	
-			},
-			noMoreContent() {
-				return this.articles.length == this.total
 			},
 			showGoToTop() {
 				return this.oldScrollTop > 800
