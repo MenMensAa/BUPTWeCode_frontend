@@ -30,12 +30,12 @@
 		                <view class="cu-item shadow">
 		                    <view class="cu-list menu-avatar">
 		                        <view class="cu-item">
-		                            <view class="cu-avatar round lg"
+		                            <view class="cu-avatar round lg" @click.stop="userAvatarClick(item)"
 		                                  :style="[{ 'backgroundImage': 'url(' + item.author.avatar + ')'}]">
 		                                  <view class="cu-tag badge" :class=" item.author.gender%2 == 0 ? 'cuIcon-female bg-pink': 'cuIcon-male bg-blue' "></view>
 		                            </view>
 		                            <view class="content flex-sub">
-		                                <view class="text-grey">{{item.author.username}}</view>
+		                                <view class="text-grey" @click.stop="userAvatarClick(item)">{{item.author.username}}</view>
 		                                <view class="text-gray text-sm flex justify-between">
 		                                    {{item.created | timeFormatter}}
 		                                </view>
@@ -205,6 +205,11 @@
     				current: img
     			});
     		},
+            userAvatarClick(item) {
+                uni.navigateTo({
+                    url: "/pages/zoom/zoom?user_id=" + item.author.author_id
+                })
+            }
     	},
         computed: {
             scrollViewHeight() {

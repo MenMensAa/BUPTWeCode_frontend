@@ -7,24 +7,9 @@
         <my-toast ref="toast"></my-toast>
         <my-modal ref="modal"></my-modal>
         
-        <!-- <template v-if="activeIndex === 0">
-            <home-view></home-view>
-        </template>
-        <template v-else-if="activeIndex === 1">
-            <board-view></board-view>
-        </template>
-        <template v-else-if="activeIndex === 2">
-            <notify-view @change="countChangeHandler"></notify-view>
-        </template>
-        <template v-else>
-            <me-view></me-view>
-        </template> -->
         <home-view :class="{ hidden: activeIndex != 0 }"></home-view>
         <board-view :class="{ hidden: activeIndex != 1 }"></board-view>
         <notify-view :class="{ hidden: activeIndex != 2 }" @change="countChangeHandler"></notify-view>
-        <!-- <template v-if="activeIndex === 2">
-            <notify-view @change="countChangeHandler"></notify-view>
-        </template> -->
         <me-view :class="{ hidden: activeIndex != 3 }"></me-view>
         
         <view class="main-tabbar">

@@ -119,7 +119,6 @@
                 this.showBoardSelector = false
             }
             if (!this.$store.getters.boardLoaded) {
-                console.log("board loading")
                 GET_board_mounted().then(res => {
                     console.log(res.data.boards)
                     this.$store.dispatch("setBoardList", {
@@ -229,7 +228,6 @@
                                 // do something
                             }).then(res => {
                                 this.$refs.toast.showToast("图片上传成功")
-                                console.log(res.imageURL)
                                 this.articleForm.images.push(this.$store.getters.imageDomain+res.key)
                             }).catch(err => {
                                 this.$refs.toast.showToast("图片上传失败")

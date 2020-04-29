@@ -31,6 +31,7 @@
 
         <button class="cu-btn block bg-green margin-xl lg" type="" @click="goToResigt">测试: 重新登陆</button>
         <button class="cu-btn block bg-green margin-xl lg" type="" @click="clearStorage">测试: 清除所有缓存</button>
+        <button class="cu-btn block bg-green margin-xl lg" type="" @click="goToBlock">测试: 被封禁</button>
     </view>
 </template>
 
@@ -66,6 +67,11 @@
             goToResigt() {
                 uni.redirectTo({
                     url: '/pages/regist/regist?from=me'
+                })
+            },
+            goToBlock() {
+                uni.redirectTo({
+                    url: '/pages/block/block'
                 })
             },
             serviceClick(index) {

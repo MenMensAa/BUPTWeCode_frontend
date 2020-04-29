@@ -1,6 +1,7 @@
 export const CODES = {
     OK: 200,
     TOKEN_ERROR: 499,
+    BLOCK_ERROR: 498,
     PARAMS_ERROR: 400,
     AUTH_ERROR: 401,
     REQ_REJECT: 403,

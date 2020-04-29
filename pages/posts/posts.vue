@@ -32,7 +32,7 @@
                                     
 								</view>
                                 <view class="board-name" v-if="item.quality == 1">
-                                	<button class="cu-btn follow-btn round line-red">
+                                	<button class="cu-btn round line-red">
                                 	    <text class="cuIcon-selection"></text>精品贴
                                 	</button>
                                 </view>
@@ -92,7 +92,6 @@
 
 	export default {
 		onLoad() {
-            console.log("loading")
 			this.queryNewArticle()
 		},
 		onReady() {
@@ -224,10 +223,14 @@
 			},
 		},
 		computed: {
+            userId() {
+                return this.$store.getters.userInfo.uid
+            },
 			queryData() {
                 return {
                     offset: this.articles.length,
-                    limit: 10
+                    limit: 10,
+                    user_id: this.userId
                 }	
 			},
 			showGoToTop() {

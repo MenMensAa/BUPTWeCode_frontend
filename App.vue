@@ -1,6 +1,6 @@
 <script>
     import Vue from 'vue'
-    import { GET_me_mounted } from 'network/functions.js'
+    import { GET_me_login } from 'network/functions.js'
     
 	export default {
 		onLaunch: function() {
@@ -93,6 +93,19 @@
             if (!this.$store.getters.hasToken) {
                 uni.redirectTo({
                     url: "/pages/regist/regist?from=app"
+                })
+            } else {
+                GET_me_login().then(res => {
+                    this.$store.dispatch({
+                        type: "setToken",
+                        token: res.data.token
+                    }).then(() => {}).catch(() => {})
+                    this.$store.dispatch({
+                        type: 'updateUser',
+                        userInfo: res.data.info
+                    })
+                }).catch(err => {
+                    console.log(err)
                 })
             }
         },

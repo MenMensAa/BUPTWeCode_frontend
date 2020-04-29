@@ -7,13 +7,13 @@
             
             <view class="cu-list menu-avatar comment solids-top">
             	<view class="cu-item" v-for="(item, index) in notifications" :key="index" @click="notifyClick(item)">
-            		<view class="cu-avatar round"
+            		<view class="cu-avatar round" @click.stop="userAvatarClick(item)"
             		      :style="[{ 'backgroundImage': 'url(' + item.sender.avatar + ')'}]">
             		</view>
                     <view v-if="!item.visited" class="notify-spot bg-red"></view>
                     <view class="content">
             			<view class="text-grey">
-                            {{item.sender.username}}
+                            <text @click.stop="userAvatarClick(item)">{{item.sender.username}}</text>
                             <text class="text-gray" style="padding: 0rpx 10rpx;" v-if="item.category > 2">回复了你</text>
                             <text class="text-gray" style="padding: 0rpx 10rpx;" v-else>{{item.sender_content}}</text>
                         </view>
@@ -69,7 +69,11 @@
                 if (!this.pageLoading) {
                     this.pageLoading = true
                     this.loadStatus = "loading"
-                    GET_notify_mounted(this.queryData).then(res => {
+                    let queryData = { ...this.queryData }
+                    if (reload) {
+                        queryData.offset = 0
+                    }
+                    GET_notify_mounted(queryData).then(res => {
                         this.newCount = res.data.new
                         this.$emit("change", this.newCount)
                         this.loadStatus = "over"
@@ -85,7 +89,6 @@
                             } else {
                                 this.notifications.push(...res.data.notifications)
                             }
-                            this.curPage += 1
                         }
                     }).catch(err => {
                         if (this.$store.getters.debug) {
@@ -99,7 +102,6 @@
             },
             notifyClick(item) {
                 if (!item.visited) {
-                    console.log(item)
                     GET_notify_unnotify({
                         notify_id: item.notify_id
                     }).then(() => {
@@ -139,7 +141,6 @@
             },
             reloadPageHandler() {
             	this.goToTopHandler()
-            	this.curPage = 0
             	this.queryNewData(true)
             },
             navigateToArticle(article_id) {
@@ -192,6 +193,11 @@
                             console.log("notify navToComment", err)
                         }
                     }
+                })
+            },
+            userAvatarClick(item) {
+                uni.navigateTo({
+                    url: "/pages/zoom/zoom?user_id=" + item.sender.sender_id
                 })
             }
         },

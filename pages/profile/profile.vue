@@ -43,18 +43,69 @@
         		<textarea maxlength="50" v-model="profileForm.signature"></textarea>
         	</view>
         </form>
+        
+        <view class="cu-bar bg-white solid-bottom margin-top">
+        	<view class="action">
+        		<text class="cuIcon-title text-orange"></text> 我的粉丝
+        	</view>
+        </view>
+        
+        <view class="cu-list menu sm-border card-menu margin-tb">
+            <template v-if="followers.length === 0">
+                <view class="text-grey" style="text-align: center;">你还没有小粉丝</view>
+            </template>
+            <template v-for="(item, index) in followers" v-else>
+                <view :key="index" class="cu-item arrow" @click="userAvatarClick(item)">
+                    <view class="content">
+                        <text class="cu-avatar radius bg-gray xs"
+                              :style="[{ backgroundImage: 'url(' + item.avatar + ')'}]"></text>
+                        <text class="text-gray padding-lr">{{item.username}}</text>
+                    </view>
+                </view>
+            </template>
+        </view>
+        
+        <view class="cu-bar bg-white solid-bottom">
+        	<view class="action">
+        		<text class="cuIcon-title text-orange"></text> 我的关注
+        	</view>
+        </view>
+        
+        <view class="cu-list menu sm-border card-menu margin-tb">
+            <template v-if="followeds.length === 0">
+                <view class="text-grey" style="text-align: center;">你还没有关注过任何人</view>
+            </template>
+            <template v-for="(item, index) in followeds">
+                <view :key="index" class="cu-item arrow" @click="userAvatarClick(item)">
+                    <view class="content">
+                        <text class="cu-avatar radius bg-gray xs round"
+                              :style="[{ backgroundImage: 'url(' + item.avatar + ')'}]"></text>
+                        <text class="text-gray padding-lr">{{item.username}}</text>
+                    </view>
+                </view>
+            </template>
+        </view>
 	</view>
 </template>
 
 <script>
     import { imageUploader } from '../../common/image_uploader.js'
-    import { POST_profile_updateProfile } from '../../network/functions.js'
+    import { POST_profile_updateProfile, POST_profile_follow } from '../../network/functions.js'
     
 	export default {
         onLoad() {
             let profile = this.$store.getters.userInfo
             this.profileForm = JSON.parse(JSON.stringify(profile))
             this.oldProfileForm = JSON.parse(JSON.stringify(profile))
+            POST_profile_follow().then(res => {
+                this.followeds = res.data.followeds
+                this.followers = res.data.followers
+            }).catch(err => {
+                this.$refs.toast.showToast("加载出现错误")
+                if (this.$store.getters.debug) {
+                    console.log('profile follow', err)
+                }
+            })
         },
 		data() {
 			return {
@@ -72,6 +123,9 @@
                 },
                 uploading: false,
                 sending: false,
+                
+                followers: [],
+                followeds: []
 			};
 		},
         methods: {
@@ -145,6 +199,11 @@
                 	current: this.profileForm.avatar
                 });
             },
+            userAvatarClick(item) {
+                uni.navigateTo({
+                    url: "/pages/zoom/zoom?user_id=" + item.uid
+                })
+            }
         },
         computed: {
             isMale() {

@@ -15,7 +15,7 @@
             
             <view class="cu-list menu-avatar comment solids-top my-comment" @click="changeTargetComment(comment)">
             	<view class="cu-item">
-            		<view class="cu-avatar round"
+            		<view class="cu-avatar round" @click.stop="userAvatarClick(comment)"
             		      :style="[{ 'backgroundImage': 'url(' + comment.author.avatar + ')'}]">
             		</view>
                     <view class="comment-rate action text-grey" @click.stop="rateComment">
@@ -23,7 +23,7 @@
                         <text class="cuIcon-appreciate padding-lr-xs" v-else></text>
                     </view>
                     <view class="content">
-            			<view class="text-grey">{{comment.author.username}}</view>
+            			<view class="text-grey" @click.stop="userAvatarClick(comment)">{{comment.author.username}}</view>
             			<view class="text-gray text-content text-df">
             				{{comment.content}}
             			</view>
@@ -53,12 +53,12 @@
             
             <view class="cu-list menu-avatar comment solids-top">
             	<view class="cu-item" v-for="(item, index) in sub_comments" :key="index" @click="changeTargetComment(item)">
-            		<view class="cu-avatar round"
+            		<view class="cu-avatar round" @click.stop="userAvatarClick(item)"
             		      :style="[{ 'backgroundImage': 'url(' + item.author.avatar + ')'}]">
             		</view>
                     <view class="content">
             			<view class="text-grey">
-                            {{item.author.username}}
+                            <text @click.stop="userAvatarClick(item)">{{item.author.username}}</text>
                             <text class="text-gray" style="padding: 0rpx 10rpx;">回复给</text>
                             <view class="cu-avatar round sm margin-lr-xs"
                                   :style="[{ 'backgroundImage': 'url(' + item.acceptor.avatar + ')'}]">
@@ -120,7 +120,6 @@
     
 	export default {
         onLoad(options) {
-            console.log(options)
             if (this.$store.getters.hasComment) {
                 this.comment = this.$store.getters.comment
                 this.targetComment = this.$store.getters.comment
@@ -422,6 +421,11 @@
                             console.log("notify navToArticle", err)
                         }
                     }
+                })
+            },
+            userAvatarClick(item) {
+                uni.navigateTo({
+                    url: "/pages/zoom/zoom?user_id=" + item.author.author_id
                 })
             }
         },

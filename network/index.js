@@ -3,10 +3,9 @@ import { CODES } from '../common/cnst.js'
 
 
 export default function axios (options) {
-    // const baseURL = "https://www.buptwecode.com"
-    const baseURL = "https://test.buptwecode.com"
+    const baseURL = "https://www.buptwecode.com"
+    // const baseURL = "https://test.buptwecode.com"
     // const baseURL = "http://localhost:5000"
-    // const baseURL = "https://lzy.buptwecode.com"
     const url = baseURL + options.url
     let header = options.header
     if (store.getters.hasToken) {
@@ -25,6 +24,10 @@ export default function axios (options) {
                 } else if (res.data.code == CODES.TOKEN_ERROR) {
                     uni.redirectTo({
                         url: "/pages/regist/regist?expire=true&from=network"
+                    })
+                } else if (res.data.code == CODES.BLOCK_ERROR) {
+                    uni.redirectTo({
+                        url: "/pages/block/block"
                     })
                 } else {
                     reject(res.data)

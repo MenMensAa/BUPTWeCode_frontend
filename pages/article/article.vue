@@ -21,12 +21,12 @@
                 	<view class="cu-item shadow">
                 		<view class="cu-list menu-avatar">
                 			<view class="cu-item">
-                                <view class="cu-avatar round lg"
+                                <view class="cu-avatar round lg" @click.stop="userAvatarClick(article)"
                                       :style="[{ 'backgroundImage': 'url(' + article.author.avatar + ')'}]">
                                       <view class="cu-tag badge" :class=" article.author.gender%2 == 0 ? 'cuIcon-female bg-pink': 'cuIcon-male bg-blue' "></view>
                                 </view>
                 				<view class="content flex-sub">
-                					<view>{{article.author.username}}</view>
+                					<view @click.stop="userAvatarClick(article)">{{article.author.username}}</view>
                 					<view class="text-gray text-sm flex justify-between">
                 						{{article.created | timeFormatter}}
                 					</view>
@@ -69,7 +69,7 @@
                 
                 <view class="cu-list menu-avatar comment solids-top">
                 	<view class="cu-item" v-for="(item, index) in comments" :key="index" @click="viewCommentClick(item, index)">
-                		<view class="cu-avatar round"
+                		<view class="cu-avatar round" @click.stop="userAvatarClick(item)"
                 		      :style="[{ 'backgroundImage': 'url(' + item.author.avatar + ')'}]">
                 		</view>
                         <view class="comment-rate action text-grey" @click.stop="rateComment(item, index)">
@@ -77,7 +77,7 @@
                             <text class="cuIcon-appreciate padding-lr-xs" v-else></text>
                         </view>
                         <view class="content">
-                			<view class="text-grey">{{item.author.username}}</view>
+                			<view class="text-grey" @click.stop="userAvatarClick(item)">{{item.author.username}}</view>
                 			<view class="text-gray text-content text-df">
                 				{{item.content}}
                 			</view>
@@ -646,6 +646,11 @@
                         this.pageLoading = false
                     })
                 }
+            },
+            userAvatarClick(item) {
+                uni.navigateTo({
+                    url: "/pages/zoom/zoom?user_id=" + item.author.author_id
+                })
             }
 		},
         computed: {

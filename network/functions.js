@@ -54,6 +54,27 @@ export function POST_report(data) {
 // common结束部分
 
 // 专有部分,一般只供单独组件调用
+export function POST_profile_follow(data) {
+    return post({
+        url: "/api/user/follow/",
+        data: data
+    })
+}
+
+export function GET_zoom_follow(data) {
+    return get({
+        url: "/api/user/follow/",
+        data: data
+    })
+}
+
+export function GET_zoom_profile(data) {
+    return get({
+        url: "/api/user/profile/",
+        data: data
+    })
+}
+
 export function GET_tag_mounted(data) {
     return get({
         url: "/api/article/tag/",

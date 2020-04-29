@@ -62,6 +62,16 @@
             "path" : "pages/about/about",
             "style" : {}
         }
+        ,{
+            "path" : "pages/block/block",
+            "style" : {
+                "navigationBarTextStyle": "black"
+            }
+        }
+        ,{
+            "path" : "pages/zoom/zoom",
+            "style" : {}
+        }
     ],
 	"globalStyle": {
 		"navigationBarTitleText": "uni-app",
